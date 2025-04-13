@@ -371,7 +371,7 @@ const Index = () => {
             </p>
           </div>
         </div>
-      </section>
+      </footer>
 
       {/* Chat Button */}
       <div className="fixed bottom-6 right-6">
