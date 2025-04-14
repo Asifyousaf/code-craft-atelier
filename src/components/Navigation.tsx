@@ -24,6 +24,7 @@ const Navigation = () => {
           <Link to="/nutrition" className="text-sm text-gray-700 hover:text-purple-600 transition-colors">Nutrition</Link>
           <Link to="/mindfulness" className="text-sm text-gray-700 hover:text-purple-600 transition-colors">Mindfulness</Link>
           <Link to="/community" className="text-sm text-gray-700 hover:text-purple-600 transition-colors">Community</Link>
+          <Link to="/store" className="text-sm text-gray-700 hover:text-purple-600 transition-colors">Store</Link>
           <Link to="/profile" className="text-sm text-gray-700 hover:text-purple-600 transition-colors">Profile</Link>
           <Link to="/profile" className="text-sm bg-purple-600 text-white px-4 py-2 rounded-full hover:bg-purple-700 transition-colors">Sign In</Link>
         </nav>
