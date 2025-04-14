@@ -12,6 +12,8 @@ import MindfulnessPage from "./pages/MindfulnessPage";
 import CommunityPage from "./pages/CommunityPage";
 import ProfilePage from "./pages/ProfilePage";
 import StorePage from "./pages/StorePage";
+import WorkoutTrackerPage from "./pages/WorkoutTrackerPage";
+import AuthPage from "./pages/AuthPage";
 
 const queryClient = new QueryClient();
 
@@ -24,11 +26,13 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/workouts" element={<WorkoutsPage />} />
+          <Route path="/workout-tracker" element={<WorkoutTrackerPage />} />
           <Route path="/nutrition" element={<NutritionPage />} />
           <Route path="/mindfulness" element={<MindfulnessPage />} />
           <Route path="/community" element={<CommunityPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/store" element={<StorePage />} />
+          <Route path="/auth" element={<AuthPage />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
