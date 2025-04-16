@@ -1,10 +1,12 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from "@/integrations/supabase/client";
-import { Play, Pause, SkipForward, ChevronRight, Check, XCircle, Clock, Dumbbell } from 'lucide-react';
+import { Play, Pause, SkipForward, ChevronRight, Check, XCircle, Clock, Dumbbell, Flame } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "@/components/ui/use-toast";
+import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 
 interface Exercise {
   name: string;
@@ -38,6 +40,21 @@ const formatTime = (seconds: number): string => {
   return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
 };
 
+// Exercise illustrations
+const exerciseImages = {
+  "Jumping Jacks": "https://images.unsplash.com/photo-1599058917765-a780eda07a3e?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+  "Push-ups": "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+  "Air Squats": "https://images.unsplash.com/photo-1574680178050-55c6a6a96e0a?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+  "Plank": "https://images.unsplash.com/photo-1566241142888-11138d558213?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+  "Russian Twists": "https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+  "Mountain Climbers": "https://images.unsplash.com/photo-1552674605-db6ffd4facb5?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+  "Sun Salutation (Surya Namaskar)": "https://images.unsplash.com/photo-1545389336-cf090694435e?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+  "Warrior II (Virabhadrasana II)": "https://images.unsplash.com/photo-1575052814086-f385e2e2ad1b?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+  "Tree Pose (Vrksasana)": "https://images.unsplash.com/photo-1510894347713-fc3ed6fdf539?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+  // Default image for exercises without specific illustrations
+  "default": "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
+};
+
 const WorkoutSession = ({ workout, onComplete, onCancel }: WorkoutSessionProps) => {
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
   const [currentSet, setCurrentSet] = useState(1);
@@ -47,11 +64,17 @@ const WorkoutSession = ({ workout, onComplete, onCancel }: WorkoutSessionProps) 
   const [totalTimeElapsed, setTotalTimeElapsed] = useState(0);
   const [completedExercises, setCompletedExercises] = useState(0);
   const [completedExerciseDetails, setCompletedExerciseDetails] = useState<{[key: string]: boolean}>({});
+  const [animateTimer, setAnimateTimer] = useState(false);
   const timerRef = useRef<any>(null);
 
   const currentExercise = workout.exercises[currentExerciseIndex];
   const totalExercises = workout.exercises.length;
   const progress = Math.round((completedExercises / totalExercises) * 100);
+  
+  // Get exercise image
+  const getExerciseImage = (exerciseName: string) => {
+    return exerciseImages[exerciseName] || exerciseImages.default;
+  };
 
   useEffect(() => {
     if (!isPaused) {
@@ -59,6 +82,9 @@ const WorkoutSession = ({ workout, onComplete, onCancel }: WorkoutSessionProps) 
         setTimeLeft(prev => {
           if (prev <= 1) {
             clearInterval(timerRef.current);
+            // Animate timer when it reaches zero
+            setAnimateTimer(true);
+            setTimeout(() => setAnimateTimer(false), 1000);
             return 0;
           }
           return prev - 1;
@@ -188,8 +214,8 @@ const WorkoutSession = ({ workout, onComplete, onCancel }: WorkoutSessionProps) 
   };
 
   return (
-    <Card className="w-full">
-      <CardHeader>
+    <Card className="w-full border-2 border-purple-100">
+      <CardHeader className="bg-gradient-to-r from-purple-50 to-blue-50">
         <CardTitle className="flex items-center justify-between">
           <div className="flex items-center">
             <Dumbbell className="mr-2 h-5 w-5 text-purple-600" />
@@ -202,45 +228,56 @@ const WorkoutSession = ({ workout, onComplete, onCancel }: WorkoutSessionProps) 
         <CardDescription>{workout.description}</CardDescription>
       </CardHeader>
 
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-6 pt-6">
         {/* Progress */}
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
-            <span>Workout Progress</span>
-            <span>{progress}%</span>
+            <span className="font-medium">Workout Progress</span>
+            <span className="font-medium">{progress}%</span>
           </div>
-          <Progress value={progress} />
+          <Progress value={progress} className="h-2 bg-gray-100" />
         </div>
 
         {/* Current exercise */}
         {currentExerciseIndex < workout.exercises.length ? (
           <div className="space-y-6">
-            <div className="bg-gray-50 rounded-lg p-6">
+            <div className="bg-gray-50 rounded-lg p-6 shadow-sm">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-bold">{currentExercise.name}</h3>
-                <div className="text-sm font-medium bg-purple-100 text-purple-800 px-2 py-1 rounded">
+                <h3 className="text-xl font-bold text-purple-800">{currentExercise.name}</h3>
+                <div className="text-sm font-medium bg-purple-100 text-purple-800 px-3 py-1 rounded-full">
                   Set {currentSet} of {currentExercise.sets}
                 </div>
               </div>
 
+              {/* Exercise image */}
+              <div className="mb-6 rounded-lg overflow-hidden shadow-md">
+                <img 
+                  src={getExerciseImage(currentExercise.name)} 
+                  alt={currentExercise.name} 
+                  className="w-full object-cover h-64"
+                />
+              </div>
+
               {/* Timer display */}
-              <div className="bg-white rounded-lg shadow-sm p-8 mb-4">
+              <div className="bg-white rounded-lg shadow-sm p-8 mb-6">
                 <div className="text-center">
                   <p className="text-sm text-gray-500 mb-1">
                     {isResting ? "Rest Time" : "Exercise Time"}
                   </p>
-                  <div className="text-4xl font-bold mb-4">{formatTime(timeLeft)}</div>
+                  <div className={`text-4xl font-bold mb-4 transition-all ${animateTimer ? 'text-red-500 scale-110' : ''}`}>
+                    {formatTime(timeLeft)}
+                  </div>
                   <div className="flex justify-center space-x-4">
                     <Button 
                       onClick={handlePlayPause} 
                       variant="outline" 
                       size="icon"
-                      className="h-12 w-12 rounded-full"
+                      className="h-14 w-14 rounded-full border-2 hover:bg-purple-50 transition-all duration-200"
                     >
                       {isPaused ? (
-                        <Play className="h-6 w-6" />
+                        <Play className="h-6 w-6 text-purple-700" />
                       ) : (
-                        <Pause className="h-6 w-6" />
+                        <Pause className="h-6 w-6 text-purple-700" />
                       )}
                     </Button>
                     <Button 
@@ -258,33 +295,43 @@ const WorkoutSession = ({ workout, onComplete, onCancel }: WorkoutSessionProps) 
                       }} 
                       variant="outline" 
                       size="icon"
-                      className="h-12 w-12 rounded-full"
+                      className="h-14 w-14 rounded-full border-2 hover:bg-purple-50 transition-all duration-200"
                     >
-                      <SkipForward className="h-6 w-6" />
+                      <SkipForward className="h-6 w-6 text-purple-700" />
                     </Button>
                   </div>
                 </div>
               </div>
 
               {/* Instructions */}
-              <div className="space-y-3">
-                <h4 className="font-medium">Instructions:</h4>
-                <ul className="space-y-2">
-                  {currentExercise.instructions.map((instruction, index) => (
-                    <li key={index} className="flex items-start">
-                      <ChevronRight className="h-5 w-5 text-purple-600 shrink-0 mt-0.5 mr-2" />
-                      <span>{instruction}</span>
-                    </li>
-                  ))}
-                </ul>
+              <div className="space-y-3 bg-white p-4 rounded-lg shadow-sm">
+                <h4 className="font-medium text-purple-800">Instructions:</h4>
+                
+                <Carousel className="w-full">
+                  <CarouselContent>
+                    {currentExercise.instructions.map((instruction, index) => (
+                      <CarouselItem key={index} className="pl-1 md:basis-1/1">
+                        <div className="p-4 border border-purple-100 rounded-lg bg-white">
+                          <div className="flex items-start">
+                            <div className="bg-purple-100 text-purple-800 rounded-full w-6 h-6 flex items-center justify-center mr-3 shrink-0">
+                              {index + 1}
+                            </div>
+                            <p className="text-gray-700">{instruction}</p>
+                          </div>
+                        </div>
+                      </CarouselItem>
+                    ))}
+                  </CarouselContent>
+                </Carousel>
               </div>
               
               {/* Mark as Complete Button */}
               <div className="mt-6">
                 <Button 
                   onClick={handleCompleteExercise}
-                  className="w-full bg-green-600 hover:bg-green-700"
-                  disabled={completedExerciseDetails[currentExercise.name]}
+                  className={`w-full ${completedExerciseDetails[currentExercise.name] 
+                    ? 'bg-green-100 text-green-800 hover:bg-green-200' 
+                    : 'bg-green-600 hover:bg-green-700 text-white'}`}
                 >
                   <Check className="mr-2 h-5 w-5" />
                   {completedExerciseDetails[currentExercise.name] ? 'Exercise Completed!' : 'Mark Exercise Complete'}
@@ -292,39 +339,60 @@ const WorkoutSession = ({ workout, onComplete, onCancel }: WorkoutSessionProps) 
               </div>
             </div>
 
-            <div className="flex items-center justify-between text-sm text-gray-500">
+            <div className="flex flex-col sm:flex-row items-center justify-between space-y-2 sm:space-y-0 bg-purple-50 p-4 rounded-lg">
               <div className="flex items-center">
-                <Clock className="h-4 w-4 mr-1" />
-                <span>Total time: {formatTime(totalTimeElapsed)}</span>
+                <Clock className="h-5 w-5 mr-2 text-purple-600" />
+                <span className="text-gray-700 font-medium">Total time: {formatTime(totalTimeElapsed)}</span>
               </div>
-              <div>
-                Estimated calories: ~{Math.round(workout.caloriesBurn * (totalTimeElapsed / 60) / workout.duration)}
+              <div className="flex items-center">
+                <Flame className="h-5 w-5 mr-2 text-orange-500" />
+                <span className="text-gray-700 font-medium">
+                  Est. calories: ~{Math.round(workout.caloriesBurn * (totalTimeElapsed / 60) / workout.duration)}
+                </span>
               </div>
             </div>
           </div>
         ) : (
-          <div className="text-center py-8">
-            <div className="bg-green-100 text-green-800 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-              <Check className="h-8 w-8" />
+          <div className="text-center py-12">
+            <div className="bg-green-100 text-green-800 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6">
+              <Check className="h-10 w-10" />
             </div>
-            <h3 className="text-xl font-bold mb-2">Workout Complete!</h3>
-            <p className="text-gray-600 mb-4">Great job on finishing your workout!</p>
+            <h3 className="text-2xl font-bold mb-4">Workout Complete!</h3>
+            <p className="text-gray-600 mb-6">Great job on finishing your workout!</p>
+            <div className="flex items-center justify-center space-x-4">
+              <div className="text-center">
+                <div className="text-3xl font-bold text-purple-800">{Math.round(totalTimeElapsed / 60)}</div>
+                <div className="text-sm text-gray-500">Minutes</div>
+              </div>
+              <div className="h-10 border-r border-gray-200"></div>
+              <div className="text-center">
+                <div className="text-3xl font-bold text-orange-500">
+                  ~{Math.round(workout.caloriesBurn * (totalTimeElapsed / 60) / workout.duration)}
+                </div>
+                <div className="text-sm text-gray-500">Calories</div>
+              </div>
+              <div className="h-10 border-r border-gray-200"></div>
+              <div className="text-center">
+                <div className="text-3xl font-bold text-green-600">{completedExercises}</div>
+                <div className="text-sm text-gray-500">Exercises</div>
+              </div>
+            </div>
           </div>
         )}
       </CardContent>
 
-      <CardFooter className="flex justify-between">
-        <Button variant="outline" onClick={onCancel}>
+      <CardFooter className="flex justify-between bg-gray-50 rounded-b-lg">
+        <Button variant="outline" onClick={onCancel} className="border-red-200 text-red-600 hover:bg-red-50">
           <XCircle className="mr-2 h-4 w-4" />
           Cancel Workout
         </Button>
         {currentExerciseIndex >= workout.exercises.length ? (
-          <Button onClick={handleComplete}>
+          <Button onClick={handleComplete} className="bg-purple-600 hover:bg-purple-700">
             <Check className="mr-2 h-4 w-4" />
             Complete Workout
           </Button>
         ) : (
-          <Button onClick={handleNextExercise} variant="default">
+          <Button onClick={handleNextExercise} variant="default" className="bg-purple-600 hover:bg-purple-700">
             Skip Exercise
             <ChevronRight className="ml-2 h-4 w-4" />
           </Button>

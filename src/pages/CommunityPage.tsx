@@ -1,194 +1,190 @@
 
-import { Users, MessageSquare, Trophy, Search, Heart } from 'lucide-react';
+import { useState } from 'react';
 import Layout from '../components/Layout';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { UsersRound, Flame, Trophy, Search } from 'lucide-react';
+import CommunityPost from '../components/CommunityPost';
+import CreatePost from '../components/CreatePost';
+import { Input } from "@/components/ui/input";
+
+// Sample community posts
+const initialPosts = [
+  {
+    id: "1",
+    author: {
+      name: "Emma Watson",
+      avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
+      username: "emma_fit"
+    },
+    content: "Just completed my first 5K run! So proud of this milestone. What started as a personal challenge has become a passion. Anyone else training for a race soon?",
+    image: "https://images.unsplash.com/photo-1593352216923-dd286c555f84?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+    likes: 42,
+    comments: 8,
+    timePosted: "2 hours ago"
+  },
+  {
+    id: "2",
+    author: {
+      name: "Michael Johnson",
+      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
+      username: "mike_fitness"
+    },
+    content: "Here's my meal prep for the week! High protein, balanced carbs, and healthy fats. Consistency is key to reaching your nutrition goals. What's your favorite meal prep recipe?",
+    image: "https://images.unsplash.com/photo-1547496502-affa22d38842?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+    likes: 78,
+    comments: 16,
+    timePosted: "5 hours ago",
+    likedByMe: true
+  },
+  {
+    id: "3",
+    author: {
+      name: "Sarah Lee",
+      avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
+      username: "sarah_yoga"
+    },
+    content: "Finding inner peace through yoga. After 30 days of daily practice, I've noticed significant improvements in my flexibility and mental clarity. Meditation and mindfulness are truly transformative!",
+    likes: 53,
+    comments: 7,
+    timePosted: "1 day ago"
+  }
+];
+
+const popularCommunities = [
+  { name: "Weight Training", members: 14532 },
+  { name: "Runner's World", members: 12256 },
+  { name: "Nutrition & Recipes", members: 9874 },
+  { name: "Yoga & Meditation", members: 7642 },
+  { name: "Fitness Beginners", members: 5321 }
+];
 
 const CommunityPage = () => {
+  const [posts, setPosts] = useState(initialPosts);
+  const [searchTerm, setSearchTerm] = useState('');
+  
+  const handleCreatePost = (content: string, image?: string) => {
+    const newPost = {
+      id: Date.now().toString(),
+      author: {
+        name: "You",
+        avatar: "",
+        username: "user123"
+      },
+      content,
+      image,
+      likes: 0,
+      comments: 0,
+      timePosted: "Just now"
+    };
+    
+    setPosts([newPost, ...posts]);
+  };
+  
+  const filteredPosts = posts.filter(post => 
+    post.content.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    post.author.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+  
   return (
     <Layout>
-      <div className="pt-24 pb-16 bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+      <div className="pt-24 pb-16 bg-gradient-to-br from-purple-500 to-indigo-600 text-white">
         <div className="container mx-auto px-4 py-16">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">Join Our Wellness Community</h1>
+          <h1 className="text-4xl md:text-5xl font-bold mb-4">Fitness Community</h1>
           <p className="text-lg md:text-xl max-w-2xl mb-8">
-            Connect with like-minded individuals, share your progress, and get inspired by success stories.
+            Connect with like-minded individuals, share your fitness journey, and get inspired.
           </p>
-          <button className="bg-white text-purple-600 px-6 py-3 rounded-full font-medium hover:bg-gray-100 transition-colors flex items-center">
-            <Users size={18} className="mr-2" />
-            Join Community
-          </button>
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="py-12 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
-            <div className="bg-gray-50 rounded-lg p-6">
-              <div className="mb-4 flex justify-center">
-                <Users className="h-8 w-8 text-purple-600" />
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex flex-col md:flex-row gap-6">
+          <div className="w-full md:w-3/4">
+            <Tabs defaultValue="feed" className="w-full mb-6">
+              <div className="flex justify-between items-center mb-4">
+                <TabsList>
+                  <TabsTrigger value="feed">
+                    <Flame className="h-4 w-4 mr-2" />
+                    Feed
+                  </TabsTrigger>
+                  <TabsTrigger value="trending">
+                    <Trophy className="h-4 w-4 mr-2" />
+                    Trending
+                  </TabsTrigger>
+                </TabsList>
+                
+                <div className="relative w-full max-w-xs">
+                  <Input 
+                    type="text" 
+                    placeholder="Search posts..." 
+                    className="pl-10"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                </div>
               </div>
-              <p className="text-2xl font-bold text-purple-600">10,000+</p>
-              <p className="text-gray-600">Active Members</p>
+
+              <TabsContent value="feed">
+                <CreatePost onPost={handleCreatePost} />
+                
+                {filteredPosts.length > 0 ? (
+                  filteredPosts.map(post => (
+                    <CommunityPost key={post.id} post={post} />
+                  ))
+                ) : (
+                  <div className="text-center py-10 bg-gray-50 rounded-lg">
+                    <p className="text-gray-500 mb-4">No posts matching your search.</p>
+                    {searchTerm && (
+                      <Button onClick={() => setSearchTerm('')} variant="outline">
+                        Clear search
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </TabsContent>
+              
+              <TabsContent value="trending">
+                <div className="text-center py-16 bg-gray-50 rounded-lg">
+                  <h3 className="text-xl font-semibold mb-2">Trending topics coming soon!</h3>
+                  <p className="text-gray-500">We're working on bringing you the hottest fitness topics and trends.</p>
+                </div>
+              </TabsContent>
+            </Tabs>
+          </div>
+          
+          <div className="w-full md:w-1/4">
+            <div className="bg-gray-50 rounded-lg p-4 mb-6">
+              <h3 className="font-semibold text-lg mb-4 flex items-center">
+                <UsersRound className="h-4 w-4 mr-2 text-purple-600" />
+                Popular Communities
+              </h3>
+              <div className="space-y-3">
+                {popularCommunities.map((community, index) => (
+                  <div key={index}>
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium">{community.name}</span>
+                      <span className="text-xs text-gray-500">{community.members.toLocaleString()} members</span>
+                    </div>
+                    {index < popularCommunities.length - 1 && <Separator className="mt-2" />}
+                  </div>
+                ))}
+              </div>
+              <Button className="w-full mt-4 bg-purple-600 hover:bg-purple-700">
+                Browse All Communities
+              </Button>
             </div>
             
-            <div className="bg-gray-50 rounded-lg p-6">
-              <div className="mb-4 flex justify-center">
-                <MessageSquare className="h-8 w-8 text-purple-600" />
-              </div>
-              <p className="text-2xl font-bold text-purple-600">500+</p>
-              <p className="text-gray-600">Daily Discussions</p>
+            <div className="bg-gradient-to-br from-purple-100 to-blue-100 rounded-lg p-4">
+              <h3 className="font-semibold text-lg mb-2">Join the Challenge</h3>
+              <p className="text-sm text-gray-700 mb-4">
+                Participate in our 30-day fitness challenge and track your progress with the community.
+              </p>
+              <Button variant="outline" className="w-full border-purple-300 bg-white">
+                Learn More
+              </Button>
             </div>
-            
-            <div className="bg-gray-50 rounded-lg p-6">
-              <div className="mb-4 flex justify-center">
-                <Trophy className="h-8 w-8 text-purple-600" />
-              </div>
-              <p className="text-2xl font-bold text-purple-600">1,000+</p>
-              <p className="text-gray-600">Success Stories</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Discussion Forums */}
-      <div className="py-12 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row justify-between items-center mb-8">
-            <h2 className="text-2xl font-bold mb-4 md:mb-0">Popular Discussion Forums</h2>
-            <div className="relative w-full md:w-64">
-              <input 
-                type="text" 
-                placeholder="Search discussions..." 
-                className="w-full pl-10 pr-3 py-2 border rounded-lg"
-              />
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
-            </div>
-          </div>
-
-          {/* Forum Categories */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            {/* Category 1 */}
-            <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow border-t-4 border-purple-500">
-              <h3 className="font-bold text-lg mb-3">Fitness Goals</h3>
-              <p className="text-gray-600 text-sm mb-4">Share your fitness journey, goals, and progress with the community.</p>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-500">245 threads</span>
-                <button className="text-purple-600 hover:text-purple-800 text-sm font-medium">
-                  View Forum →
-                </button>
-              </div>
-            </div>
-
-            {/* Category 2 */}
-            <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow border-t-4 border-blue-500">
-              <h3 className="font-bold text-lg mb-3">Nutrition & Diet</h3>
-              <p className="text-gray-600 text-sm mb-4">Discuss meal plans, recipes, and dietary choices for optimal health.</p>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-500">318 threads</span>
-                <button className="text-purple-600 hover:text-purple-800 text-sm font-medium">
-                  View Forum →
-                </button>
-              </div>
-            </div>
-
-            {/* Category 3 */}
-            <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow border-t-4 border-green-500">
-              <h3 className="font-bold text-lg mb-3">Mental Wellness</h3>
-              <p className="text-gray-600 text-sm mb-4">Exchange ideas on mindfulness, stress reduction, and mental health.</p>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-500">192 threads</span>
-                <button className="text-purple-600 hover:text-purple-800 text-sm font-medium">
-                  View Forum →
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Recent Discussions */}
-          <h3 className="font-bold text-xl mb-6">Recent Discussions</h3>
-          <div className="space-y-4">
-            {/* Discussion 1 */}
-            <div className="bg-white rounded-lg shadow-sm p-4 hover:shadow-md transition-shadow">
-              <div className="flex items-start">
-                <div className="h-10 w-10 rounded-full bg-purple-200 mr-3 overflow-hidden">
-                  <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="Sarah Johnson" className="h-full w-full object-cover" />
-                </div>
-                <div className="flex-1">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h4 className="font-semibold">Tips for morning workout motivation</h4>
-                      <p className="text-xs text-gray-500">Posted by Sarah Johnson • 2 hours ago</p>
-                    </div>
-                    <span className="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded">Fitness</span>
-                  </div>
-                  <p className="text-sm text-gray-600 mt-2 mb-3">I'm struggling to maintain my morning workout routine. Does anyone have tips for staying motivated when it's cold and dark outside?</p>
-                  <div className="flex justify-between items-center">
-                    <div className="flex space-x-4 text-sm text-gray-500">
-                      <span className="flex items-center"><MessageSquare className="h-4 w-4 mr-1" /> 24 replies</span>
-                      <span className="flex items-center"><Heart className="h-4 w-4 mr-1" /> 15 likes</span>
-                    </div>
-                    <button className="text-purple-600 text-sm font-medium">View Discussion</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Discussion 2 */}
-            <div className="bg-white rounded-lg shadow-sm p-4 hover:shadow-md transition-shadow">
-              <div className="flex items-start">
-                <div className="h-10 w-10 rounded-full bg-purple-200 mr-3 overflow-hidden">
-                  <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Michael Chen" className="h-full w-full object-cover" />
-                </div>
-                <div className="flex-1">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h4 className="font-semibold">Favorite plant-based protein sources</h4>
-                      <p className="text-xs text-gray-500">Posted by Michael Chen • 5 hours ago</p>
-                    </div>
-                    <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">Nutrition</span>
-                  </div>
-                  <p className="text-sm text-gray-600 mt-2 mb-3">I'm trying to incorporate more plant-based proteins into my diet. What are your go-to sources that are both delicious and nutritious?</p>
-                  <div className="flex justify-between items-center">
-                    <div className="flex space-x-4 text-sm text-gray-500">
-                      <span className="flex items-center"><MessageSquare className="h-4 w-4 mr-1" /> 36 replies</span>
-                      <span className="flex items-center"><Heart className="h-4 w-4 mr-1" /> 28 likes</span>
-                    </div>
-                    <button className="text-purple-600 text-sm font-medium">View Discussion</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Discussion 3 */}
-            <div className="bg-white rounded-lg shadow-sm p-4 hover:shadow-md transition-shadow">
-              <div className="flex items-start">
-                <div className="h-10 w-10 rounded-full bg-purple-200 mr-3 overflow-hidden">
-                  <img src="https://randomuser.me/api/portraits/women/68.jpg" alt="Emma Davis" className="h-full w-full object-cover" />
-                </div>
-                <div className="flex-1">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h4 className="font-semibold">Meditation techniques for anxiety</h4>
-                      <p className="text-xs text-gray-500">Posted by Emma Davis • 8 hours ago</p>
-                    </div>
-                    <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">Mindfulness</span>
-                  </div>
-                  <p className="text-sm text-gray-600 mt-2 mb-3">I've been experiencing increased anxiety lately and want to try meditation. Can anyone recommend specific techniques or guided sessions that have helped them?</p>
-                  <div className="flex justify-between items-center">
-                    <div className="flex space-x-4 text-sm text-gray-500">
-                      <span className="flex items-center"><MessageSquare className="h-4 w-4 mr-1" /> 42 replies</span>
-                      <span className="flex items-center"><Heart className="h-4 w-4 mr-1" /> 31 likes</span>
-                    </div>
-                    <button className="text-purple-600 text-sm font-medium">View Discussion</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-8 text-center">
-            <button className="border border-purple-600 text-purple-600 px-6 py-2 rounded-full hover:bg-purple-50 transition-colors">
-              View All Discussions
-            </button>
           </div>
         </div>
       </div>
