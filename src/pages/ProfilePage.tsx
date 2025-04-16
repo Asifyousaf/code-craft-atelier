@@ -6,8 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import Layout from '../components/Layout';
 import { supabase } from "@/integrations/supabase/client";
+import AvatarSelector from '../components/AvatarSelector';
 
 // Define a proper interface for profile data
 interface ProfileData {
@@ -36,7 +38,7 @@ const ProfilePage = () => {
     weight: null,
     fitness_level: '',
     fitness_goal: '',
-    avatar_url: null,
+    avatar_url: 'https://randomuser.me/api/portraits/women/44.jpg', // Default avatar
     username: null,
     created_at: null,
     updated_at: null
@@ -51,11 +53,13 @@ const ProfilePage = () => {
     weight: null,
     fitness_level: '',
     fitness_goal: '',
-    avatar_url: null,
+    avatar_url: 'https://randomuser.me/api/portraits/women/44.jpg', // Default avatar
     username: null,
     created_at: null,
     updated_at: null
   });
+  
+  const [showAvatarSelector, setShowAvatarSelector] = useState(false);
 
   useEffect(() => {
     const getSession = async () => {
@@ -98,7 +102,7 @@ const ProfilePage = () => {
       }
 
       if (data) {
-        setProfile({
+        const profileData = {
           id: data.id,
           full_name: data.full_name || '',
           age: data.age,
@@ -106,24 +110,14 @@ const ProfilePage = () => {
           weight: data.weight,
           fitness_level: data.fitness_level || '',
           fitness_goal: data.fitness_goal || '',
-          avatar_url: data.avatar_url,
+          avatar_url: data.avatar_url || 'https://randomuser.me/api/portraits/women/44.jpg',
           username: data.username,
           created_at: data.created_at,
           updated_at: data.updated_at
-        });
-        setTempProfile({
-          id: data.id,
-          full_name: data.full_name || '',
-          age: data.age,
-          height: data.height,
-          weight: data.weight,
-          fitness_level: data.fitness_level || '',
-          fitness_goal: data.fitness_goal || '',
-          avatar_url: data.avatar_url,
-          username: data.username,
-          created_at: data.created_at,
-          updated_at: data.updated_at
-        });
+        };
+        
+        setProfile(profileData);
+        setTempProfile(profileData);
       }
     } catch (error: any) {
       toast({
@@ -140,13 +134,14 @@ const ProfilePage = () => {
       // Cancel editing
       setTempProfile({...profile});
       setEditMode(false);
+      setShowAvatarSelector(false);
     } else {
       // Start editing
       setEditMode(true);
     }
   };
 
-  const handleInputChange = (e) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setTempProfile(prev => ({
       ...prev,
@@ -154,11 +149,19 @@ const ProfilePage = () => {
     }));
   };
 
-  const handleSelectChange = (name, value) => {
+  const handleSelectChange = (name: string, value: string) => {
     setTempProfile(prev => ({
       ...prev,
       [name]: value
     }));
+  };
+
+  const handleAvatarSelect = (avatarUrl: string) => {
+    setTempProfile(prev => ({
+      ...prev,
+      avatar_url: avatarUrl
+    }));
+    setShowAvatarSelector(false);
   };
 
   const handleSaveProfile = async () => {
@@ -216,14 +219,22 @@ const ProfilePage = () => {
           {/* Profile Header */}
           <div className="flex flex-col md:flex-row items-center md:items-start mb-8">
             <div className="w-32 h-32 rounded-full bg-purple-200 mb-4 md:mb-0 md:mr-6 overflow-hidden relative">
-              <img 
-                src="https://randomuser.me/api/portraits/women/44.jpg" 
-                alt="Profile" 
-                className="w-full h-full object-cover"
-              />
-              <button className="absolute bottom-0 right-0 bg-white p-1.5 rounded-full shadow-md hover:bg-gray-100">
-                <Edit size={14} className="text-purple-600" />
-              </button>
+              <Avatar className="w-full h-full">
+                <AvatarImage 
+                  src={tempProfile.avatar_url || ''} 
+                  alt="Profile" 
+                  className="w-full h-full object-cover"
+                />
+                <AvatarFallback>{profile.full_name?.charAt(0) || 'U'}</AvatarFallback>
+              </Avatar>
+              {editMode && (
+                <button 
+                  className="absolute bottom-0 right-0 bg-white p-1.5 rounded-full shadow-md hover:bg-gray-100"
+                  onClick={() => setShowAvatarSelector(!showAvatarSelector)}
+                >
+                  <Edit size={14} className="text-purple-600" />
+                </button>
+              )}
             </div>
             
             <div className="text-center md:text-left flex-1">
@@ -249,6 +260,15 @@ const ProfilePage = () => {
                   {profile.fitness_goal ? profile.fitness_goal.replace('_', ' ').charAt(0).toUpperCase() + profile.fitness_goal.replace('_', ' ').slice(1) : 'No goal set'}
                 </span>
               </div>
+
+              {showAvatarSelector && editMode && (
+                <div className="mb-6 p-4 bg-white border rounded-lg shadow-sm">
+                  <AvatarSelector 
+                    selectedAvatar={tempProfile.avatar_url || ''}
+                    onSelectAvatar={handleAvatarSelect}
+                  />
+                </div>
+              )}
               
               {editMode ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
@@ -445,7 +465,6 @@ const ProfilePage = () => {
                   </div>
                 </div>
                 
-                {/* Keep existing activity items */}
                 {/* Activity Item 2 */}
                 <div className="bg-white rounded-lg border p-4">
                   <div className="flex items-center">
@@ -485,7 +504,6 @@ const ProfilePage = () => {
               </div>
             </TabsContent>
             
-            {/* Keep existing tabs content */}
             <TabsContent value="progress" className="mt-6">
               <h2 className="text-xl font-semibold mb-4">Your Progress</h2>
               

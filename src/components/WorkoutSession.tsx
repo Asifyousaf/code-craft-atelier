@@ -47,6 +47,7 @@ const WorkoutSession = ({ workout, onComplete, onCancel }: WorkoutSessionProps) 
   const [timeLeft, setTimeLeft] = useState(0);
   const [totalTimeElapsed, setTotalTimeElapsed] = useState(0);
   const [completedExercises, setCompletedExercises] = useState(0);
+  const [completedExerciseDetails, setCompletedExerciseDetails] = useState<{[key: string]: boolean}>({});
   const timerRef = useRef<any>(null);
 
   const currentExercise = workout.exercises[currentExerciseIndex];
@@ -118,6 +119,13 @@ const WorkoutSession = ({ workout, onComplete, onCancel }: WorkoutSessionProps) 
 
   const handleNextExercise = () => {
     if (currentExerciseIndex < workout.exercises.length - 1) {
+      // Mark current exercise as completed
+      const exerciseName = workout.exercises[currentExerciseIndex].name;
+      setCompletedExerciseDetails(prev => ({
+        ...prev,
+        [exerciseName]: true
+      }));
+      
       // Update completed exercises count
       setCompletedExercises(prev => prev + 1);
       
@@ -128,6 +136,38 @@ const WorkoutSession = ({ workout, onComplete, onCancel }: WorkoutSessionProps) 
       setIsPaused(true);
     } else {
       // Workout complete
+      // Mark last exercise as completed if it's not already
+      const exerciseName = workout.exercises[currentExerciseIndex].name;
+      if (!completedExerciseDetails[exerciseName]) {
+        setCompletedExerciseDetails(prev => ({
+          ...prev,
+          [exerciseName]: true
+        }));
+        setCompletedExercises(prev => prev + 1);
+      }
+      handleComplete();
+    }
+  };
+
+  const handleCompleteExercise = () => {
+    const exerciseName = workout.exercises[currentExerciseIndex].name;
+    
+    // Only mark as completed if not already completed
+    if (!completedExerciseDetails[exerciseName]) {
+      setCompletedExerciseDetails(prev => ({
+        ...prev,
+        [exerciseName]: true
+      }));
+      setCompletedExercises(prev => prev + 1);
+    }
+    
+    // Move to next exercise
+    if (currentExerciseIndex < workout.exercises.length - 1) {
+      setCurrentExerciseIndex(prev => prev + 1);
+      setCurrentSet(1);
+      setIsResting(false);
+      setIsPaused(true);
+    } else {
       handleComplete();
     }
   };
@@ -142,6 +182,8 @@ const WorkoutSession = ({ workout, onComplete, onCancel }: WorkoutSessionProps) 
       type: workout.type,
       duration: minutesSpent,
       calories_burned: estimatedCalories,
+      completed_exercises: completedExercises,
+      exercise_details: completedExerciseDetails
     };
     
     onComplete(workoutData);
@@ -237,6 +279,18 @@ const WorkoutSession = ({ workout, onComplete, onCancel }: WorkoutSessionProps) 
                     </li>
                   ))}
                 </ul>
+              </div>
+              
+              {/* Mark as Complete Button */}
+              <div className="mt-6">
+                <Button 
+                  onClick={handleCompleteExercise}
+                  className="w-full bg-green-600 hover:bg-green-700"
+                  disabled={completedExerciseDetails[currentExercise.name]}
+                >
+                  <Check className="mr-2 h-5 w-5" />
+                  {completedExerciseDetails[currentExercise.name] ? 'Exercise Completed!' : 'Mark Exercise Complete'}
+                </Button>
               </div>
             </div>
 

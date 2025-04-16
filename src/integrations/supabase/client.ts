@@ -16,3 +16,28 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     autoRefreshToken: true,
   }
 });
+
+// Function to send welcome email
+export const sendWelcomeEmail = async (userData: {
+  email: string;
+  name: string;
+  fitness_goal: string | null;
+  fitness_level: string | null;
+}) => {
+  try {
+    const response = await fetch(`${SUPABASE_URL}/functions/v1/send-welcome-email`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${SUPABASE_PUBLISHABLE_KEY}`
+      },
+      body: JSON.stringify(userData)
+    });
+    
+    const data = await response.json();
+    return { success: true, data };
+  } catch (error) {
+    console.error('Error sending welcome email:', error);
+    return { success: false, error };
+  }
+};
