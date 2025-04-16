@@ -9,26 +9,52 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import Layout from '../components/Layout';
 import { supabase } from "@/integrations/supabase/client";
 
+// Define a proper interface for profile data
+interface ProfileData {
+  id: string;
+  full_name: string | null;
+  age: number | null;
+  height: number | null;
+  weight: number | null;
+  fitness_level: string | null;
+  fitness_goal: string | null;
+  avatar_url: string | null;
+  username: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+}
+
 const ProfilePage = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  const [session, setSession] = useState(null);
-  const [profile, setProfile] = useState({
+  const [session, setSession] = useState<any>(null);
+  const [profile, setProfile] = useState<ProfileData>({
+    id: '',
     full_name: '',
-    age: '',
-    height: '',
-    weight: '',
+    age: null,
+    height: null,
+    weight: null,
     fitness_level: '',
-    fitness_goal: ''
+    fitness_goal: '',
+    avatar_url: null,
+    username: null,
+    created_at: null,
+    updated_at: null
   });
+  
   const [editMode, setEditMode] = useState(false);
-  const [tempProfile, setTempProfile] = useState({
+  const [tempProfile, setTempProfile] = useState<ProfileData>({
+    id: '',
     full_name: '',
-    age: '',
-    height: '',
-    weight: '',
+    age: null,
+    height: null,
+    weight: null,
     fitness_level: '',
-    fitness_goal: ''
+    fitness_goal: '',
+    avatar_url: null,
+    username: null,
+    created_at: null,
+    updated_at: null
   });
 
   useEffect(() => {
@@ -59,7 +85,7 @@ const ProfilePage = () => {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
-  const fetchProfile = async (userId) => {
+  const fetchProfile = async (userId: string) => {
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -73,23 +99,33 @@ const ProfilePage = () => {
 
       if (data) {
         setProfile({
+          id: data.id,
           full_name: data.full_name || '',
-          age: data.age?.toString() || '',
-          height: data.height?.toString() || '',
-          weight: data.weight?.toString() || '',
+          age: data.age,
+          height: data.height,
+          weight: data.weight,
           fitness_level: data.fitness_level || '',
-          fitness_goal: data.fitness_goal || ''
+          fitness_goal: data.fitness_goal || '',
+          avatar_url: data.avatar_url,
+          username: data.username,
+          created_at: data.created_at,
+          updated_at: data.updated_at
         });
         setTempProfile({
+          id: data.id,
           full_name: data.full_name || '',
-          age: data.age?.toString() || '',
-          height: data.height?.toString() || '',
-          weight: data.weight?.toString() || '',
+          age: data.age,
+          height: data.height,
+          weight: data.weight,
           fitness_level: data.fitness_level || '',
-          fitness_goal: data.fitness_goal || ''
+          fitness_goal: data.fitness_goal || '',
+          avatar_url: data.avatar_url,
+          username: data.username,
+          created_at: data.created_at,
+          updated_at: data.updated_at
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error",
         description: "Failed to fetch profile data",
@@ -133,9 +169,9 @@ const ProfilePage = () => {
       // Parse numeric values
       const updatedProfile = {
         ...tempProfile,
-        age: tempProfile.age ? parseInt(tempProfile.age) : null,
-        height: tempProfile.height ? parseInt(tempProfile.height) : null,
-        weight: tempProfile.weight ? parseInt(tempProfile.weight) : null
+        age: tempProfile.age ? parseInt(String(tempProfile.age)) : null,
+        height: tempProfile.height ? parseInt(String(tempProfile.height)) : null,
+        weight: tempProfile.weight ? parseInt(String(tempProfile.weight)) : null
       };
 
       const { error } = await supabase
@@ -151,7 +187,7 @@ const ProfilePage = () => {
         title: "Success",
         description: "Profile updated successfully",
       });
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error",
         description: "Failed to update profile",
@@ -194,7 +230,7 @@ const ProfilePage = () => {
               {editMode ? (
                 <Input
                   name="full_name"
-                  value={tempProfile.full_name}
+                  value={tempProfile.full_name || ""}
                   onChange={handleInputChange}
                   className="text-2xl font-bold mb-1"
                   placeholder="Full Name"
@@ -221,7 +257,7 @@ const ProfilePage = () => {
                     <Input
                       name="age"
                       type="number"
-                      value={tempProfile.age}
+                      value={tempProfile.age?.toString() || ""}
                       onChange={handleInputChange}
                       placeholder="Age"
                     />
@@ -232,7 +268,7 @@ const ProfilePage = () => {
                     <Input
                       name="height"
                       type="number"
-                      value={tempProfile.height}
+                      value={tempProfile.height?.toString() || ""}
                       onChange={handleInputChange}
                       placeholder="Height"
                     />
@@ -243,7 +279,7 @@ const ProfilePage = () => {
                     <Input
                       name="weight"
                       type="number"
-                      value={tempProfile.weight}
+                      value={tempProfile.weight?.toString() || ""}
                       onChange={handleInputChange}
                       placeholder="Weight"
                     />
@@ -252,7 +288,7 @@ const ProfilePage = () => {
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Fitness Level</label>
                     <Select 
-                      value={tempProfile.fitness_level}
+                      value={tempProfile.fitness_level || ""}
                       onValueChange={(value) => handleSelectChange('fitness_level', value)}
                     >
                       <SelectTrigger>
@@ -269,7 +305,7 @@ const ProfilePage = () => {
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Fitness Goal</label>
                     <Select 
-                      value={tempProfile.fitness_goal}
+                      value={tempProfile.fitness_goal || ""}
                       onValueChange={(value) => handleSelectChange('fitness_goal', value)}
                     >
                       <SelectTrigger>

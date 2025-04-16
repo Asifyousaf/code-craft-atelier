@@ -10,11 +10,14 @@ import { toast } from "@/components/ui/use-toast";
 import WorkoutForm from '../components/WorkoutForm';
 import WorkoutHistoryList from '../components/WorkoutHistoryList';
 import WorkoutStats from '../components/WorkoutStats';
+import WorkoutSession from '../components/WorkoutSession';
+import WorkoutList from '../components/WorkoutList';
 
 const WorkoutTrackerPage = () => {
-  const [session, setSession] = useState(null);
+  const [session, setSession] = useState<any>(null);
   const [activeView, setActiveView] = useState('summary');
   const [isLoading, setIsLoading] = useState(true);
+  const [activeWorkout, setActiveWorkout] = useState<any>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -46,6 +49,40 @@ const WorkoutTrackerPage = () => {
     }
   }, [session, isLoading, navigate]);
 
+  const handleWorkoutComplete = async (workoutData: any) => {
+    try {
+      const { error } = await supabase.from('workouts').insert({
+        user_id: session.user.id,
+        title: workoutData.title,
+        type: workoutData.type,
+        duration: workoutData.duration,
+        calories_burned: workoutData.calories_burned,
+        date: new Date().toISOString().split('T')[0]
+      });
+
+      if (error) throw error;
+      
+      toast({
+        title: "Workout Completed",
+        description: "Your workout has been recorded successfully!",
+      });
+      
+      setActiveWorkout(null);
+      setActiveView('history');
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to save workout data",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleStartWorkout = (workout: any) => {
+    setActiveWorkout(workout);
+    setActiveView('active-workout');
+  };
+
   if (isLoading || !session) {
     return (
       <Layout>
@@ -68,92 +105,110 @@ const WorkoutTrackerPage = () => {
       </div>
 
       <div className="container mx-auto px-4 py-8">
-        <div className="flex flex-wrap mb-8 space-x-2">
-          <Button 
-            variant={activeView === 'summary' ? 'default' : 'outline'}
-            onClick={() => setActiveView('summary')}
-            className="mb-2"
-          >
-            <LineChart className="mr-2 h-4 w-4" /> Summary
-          </Button>
-          <Button 
-            variant={activeView === 'log' ? 'default' : 'outline'}
-            onClick={() => setActiveView('log')}
-            className="mb-2"
-          >
-            <PlusCircle className="mr-2 h-4 w-4" /> Log Workout
-          </Button>
-          <Button 
-            variant={activeView === 'history' ? 'default' : 'outline'}
-            onClick={() => setActiveView('history')}
-            className="mb-2"
-          >
-            <Calendar className="mr-2 h-4 w-4" /> Workout History
-          </Button>
-        </div>
+        {!activeWorkout ? (
+          <>
+            <div className="flex flex-wrap mb-8 space-x-2">
+              <Button 
+                variant={activeView === 'summary' ? 'default' : 'outline'}
+                onClick={() => setActiveView('summary')}
+                className="mb-2"
+              >
+                <LineChart className="mr-2 h-4 w-4" /> Summary
+              </Button>
+              <Button 
+                variant={activeView === 'log' ? 'default' : 'outline'}
+                onClick={() => setActiveView('log')}
+                className="mb-2"
+              >
+                <PlusCircle className="mr-2 h-4 w-4" /> Log Workout
+              </Button>
+              <Button 
+                variant={activeView === 'history' ? 'default' : 'outline'}
+                onClick={() => setActiveView('history')}
+                className="mb-2"
+              >
+                <Calendar className="mr-2 h-4 w-4" /> Workout History
+              </Button>
+              <Button 
+                variant={activeView === 'start-workout' ? 'default' : 'outline'}
+                onClick={() => setActiveView('start-workout')}
+                className="mb-2"
+              >
+                <Dumbbell className="mr-2 h-4 w-4" /> Start Workout
+              </Button>
+            </div>
 
-        {activeView === 'summary' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Dumbbell className="mr-2 h-5 w-5 text-purple-600" />
-                  Quick Log Workout
-                </CardTitle>
-                <CardDescription>Record your latest workout session</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-600 mb-4">Keep track of your fitness journey by logging your workouts.</p>
-              </CardContent>
-              <CardFooter>
-                <Button onClick={() => setActiveView('log')} className="w-full">
-                  Log Workout <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </CardFooter>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Calendar className="mr-2 h-5 w-5 text-purple-600" />
-                  View History
-                </CardTitle>
-                <CardDescription>Review your past workout sessions</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-600 mb-4">See your progress over time and stay motivated.</p>
-              </CardContent>
-              <CardFooter>
-                <Button variant="outline" onClick={() => setActiveView('history')} className="w-full">
-                  View History <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </CardFooter>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <LineChart className="mr-2 h-5 w-5 text-purple-600" />
-                  Workout Stats
-                </CardTitle>
-                <CardDescription>Analyze your fitness performance</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-600 mb-4">Gain insights from your workout data to optimize your routine.</p>
-              </CardContent>
-              <CardFooter>
-                <Button variant="outline" onClick={() => setActiveView('stats')} className="w-full">
-                  View Stats <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </CardFooter>
-            </Card>
-          </div>
+            {activeView === 'summary' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <Dumbbell className="mr-2 h-5 w-5 text-purple-600" />
+                      Quick Log Workout
+                    </CardTitle>
+                    <CardDescription>Record your latest workout session</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-gray-600 mb-4">Keep track of your fitness journey by logging your workouts.</p>
+                  </CardContent>
+                  <CardFooter>
+                    <Button onClick={() => setActiveView('log')} className="w-full">
+                      Log Workout <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  </CardFooter>
+                </Card>
+                
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <Calendar className="mr-2 h-5 w-5 text-purple-600" />
+                      View History
+                    </CardTitle>
+                    <CardDescription>Review your past workout sessions</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-gray-600 mb-4">See your progress over time and stay motivated.</p>
+                  </CardContent>
+                  <CardFooter>
+                    <Button variant="outline" onClick={() => setActiveView('history')} className="w-full">
+                      View History <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  </CardFooter>
+                </Card>
+                
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <Dumbbell className="mr-2 h-5 w-5 text-purple-600" />
+                      Start Workout
+                    </CardTitle>
+                    <CardDescription>Follow guided workout routines</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-gray-600 mb-4">Get instructions and track your progress in real-time.</p>
+                  </CardContent>
+                  <CardFooter>
+                    <Button variant="default" onClick={() => setActiveView('start-workout')} className="w-full">
+                      Start Now <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  </CardFooter>
+                </Card>
+              </div>
+            )}
+
+            {activeView === 'summary' && <WorkoutStats userId={session.user.id} />}
+            {activeView === 'log' && <WorkoutForm userId={session.user.id} onSuccess={() => setActiveView('history')} />}
+            {activeView === 'history' && <WorkoutHistoryList userId={session.user.id} />}
+            {activeView === 'start-workout' && <WorkoutList onSelectWorkout={handleStartWorkout} />}
+          </>
+        ) : (
+          // Show active workout session
+          <WorkoutSession 
+            workout={activeWorkout} 
+            onComplete={handleWorkoutComplete} 
+            onCancel={() => setActiveWorkout(null)} 
+          />
         )}
-
-        {activeView === 'summary' && <WorkoutStats userId={session.user.id} />}
-        {activeView === 'log' && <WorkoutForm userId={session.user.id} onSuccess={() => setActiveView('history')} />}
-        {activeView === 'history' && <WorkoutHistoryList userId={session.user.id} />}
-        {activeView === 'stats' && <WorkoutStats userId={session.user.id} />}
       </div>
     </Layout>
   );
