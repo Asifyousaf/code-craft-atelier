@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { Play, Pause, SkipForward, ChevronRight, Check, XCircle, Clock, Dumbbell } from 'lucide-react';
@@ -177,13 +176,12 @@ const WorkoutSession = ({ workout, onComplete, onCancel }: WorkoutSessionProps) 
     const minutesSpent = Math.round(totalTimeElapsed / 60);
     const estimatedCalories = Math.round(workout.caloriesBurn * (minutesSpent / workout.duration));
     
+    // Updated to match database schema - only include fields that exist in the workouts table
     const workoutData = {
       title: workout.title,
       type: workout.type,
       duration: minutesSpent,
-      calories_burned: estimatedCalories,
-      completed_exercises: completedExercises,
-      exercise_details: completedExerciseDetails
+      calories_burned: estimatedCalories
     };
     
     onComplete(workoutData);

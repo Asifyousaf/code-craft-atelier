@@ -219,9 +219,14 @@ const WorkoutsPage = () => {
     try {
       if (!session) return;
       
+      // Modified to match the database schema (only include fields that exist in the workouts table)
       const { error } = await supabase.from('workouts').insert({
         user_id: session.user.id,
-        ...workoutData,
+        title: workoutData.title,
+        type: workoutData.type,
+        duration: workoutData.duration,
+        calories_burned: workoutData.calories_burned,
+        date: new Date().toISOString().split('T')[0]
       });
 
       if (error) throw error;
