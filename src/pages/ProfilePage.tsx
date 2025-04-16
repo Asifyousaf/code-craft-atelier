@@ -1,9 +1,178 @@
-
-import { User, Settings, Activity, Award, Heart, MessageSquare, Calendar, ChevronRight, Edit } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { User, Settings, Activity, Award, Heart, MessageSquare, Calendar, ChevronRight, Edit, Save, X, Ruler, Weight } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { toast } from "@/components/ui/use-toast";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Layout from '../components/Layout';
+import { supabase } from "@/integrations/supabase/client";
 
 const ProfilePage = () => {
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [session, setSession] = useState(null);
+  const [profile, setProfile] = useState({
+    full_name: '',
+    age: '',
+    height: '',
+    weight: '',
+    fitness_level: '',
+    fitness_goal: ''
+  });
+  const [editMode, setEditMode] = useState(false);
+  const [tempProfile, setTempProfile] = useState({
+    full_name: '',
+    age: '',
+    height: '',
+    weight: '',
+    fitness_level: '',
+    fitness_goal: ''
+  });
+
+  useEffect(() => {
+    const getSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setSession(session);
+      
+      if (!session) {
+        navigate('/auth');
+        return;
+      }
+      
+      await fetchProfile(session.user.id);
+      setLoading(false);
+    };
+    
+    getSession();
+    
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setSession(session);
+        if (!session) {
+          navigate('/auth');
+        }
+      }
+    );
+
+    return () => subscription.unsubscribe();
+  }, [navigate]);
+
+  const fetchProfile = async (userId) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      if (data) {
+        setProfile({
+          full_name: data.full_name || '',
+          age: data.age?.toString() || '',
+          height: data.height?.toString() || '',
+          weight: data.weight?.toString() || '',
+          fitness_level: data.fitness_level || '',
+          fitness_goal: data.fitness_goal || ''
+        });
+        setTempProfile({
+          full_name: data.full_name || '',
+          age: data.age?.toString() || '',
+          height: data.height?.toString() || '',
+          weight: data.weight?.toString() || '',
+          fitness_level: data.fitness_level || '',
+          fitness_goal: data.fitness_goal || ''
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to fetch profile data",
+        variant: "destructive"
+      });
+      console.error('Error fetching profile:', error);
+    }
+  };
+
+  const handleEditToggle = () => {
+    if (editMode) {
+      // Cancel editing
+      setTempProfile({...profile});
+      setEditMode(false);
+    } else {
+      // Start editing
+      setEditMode(true);
+    }
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setTempProfile(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSelectChange = (name, value) => {
+    setTempProfile(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSaveProfile = async () => {
+    if (!session?.user) return;
+
+    setLoading(true);
+    try {
+      // Parse numeric values
+      const updatedProfile = {
+        ...tempProfile,
+        age: tempProfile.age ? parseInt(tempProfile.age) : null,
+        height: tempProfile.height ? parseInt(tempProfile.height) : null,
+        weight: tempProfile.weight ? parseInt(tempProfile.weight) : null
+      };
+
+      const { error } = await supabase
+        .from('profiles')
+        .update(updatedProfile)
+        .eq('id', session.user.id);
+
+      if (error) throw error;
+
+      setProfile({...tempProfile});
+      setEditMode(false);
+      toast({
+        title: "Success",
+        description: "Profile updated successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update profile",
+        variant: "destructive"
+      });
+      console.error('Error updating profile:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="animate-pulse text-purple-600">Loading...</div>
+        </div>
+      </Layout>
+    );
+  }
+
   return (
     <Layout>
       <div className="pt-24 bg-white">
@@ -22,23 +191,157 @@ const ProfilePage = () => {
             </div>
             
             <div className="text-center md:text-left flex-1">
-              <h1 className="text-2xl font-bold mb-1">Sarah Johnson</h1>
+              {editMode ? (
+                <Input
+                  name="full_name"
+                  value={tempProfile.full_name}
+                  onChange={handleInputChange}
+                  className="text-2xl font-bold mb-1"
+                  placeholder="Full Name"
+                />
+              ) : (
+                <h1 className="text-2xl font-bold mb-1">{profile.full_name}</h1>
+              )}
+              
               <p className="text-gray-600 mb-4">Fitness enthusiast • Joined March 2023</p>
+              
               <div className="flex flex-wrap justify-center md:justify-start gap-3 mb-4">
-                <span className="bg-purple-100 text-purple-800 text-xs px-3 py-1 rounded-full">Runner</span>
-                <span className="bg-blue-100 text-blue-800 text-xs px-3 py-1 rounded-full">Yogi</span>
-                <span className="bg-green-100 text-green-800 text-xs px-3 py-1 rounded-full">Plant-based</span>
+                <span className="bg-purple-100 text-purple-800 text-xs px-3 py-1 rounded-full">
+                  {profile.fitness_level ? profile.fitness_level.charAt(0).toUpperCase() + profile.fitness_level.slice(1) : 'No level set'}
+                </span>
+                <span className="bg-blue-100 text-blue-800 text-xs px-3 py-1 rounded-full">
+                  {profile.fitness_goal ? profile.fitness_goal.replace('_', ' ').charAt(0).toUpperCase() + profile.fitness_goal.replace('_', ' ').slice(1) : 'No goal set'}
+                </span>
               </div>
-              <p className="text-gray-600 text-sm max-w-lg mb-4">
-                Passionate about living a balanced lifestyle. When I'm not at the gym, you'll find me hiking or experimenting with new healthy recipes.
-              </p>
+              
+              {editMode ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Age</label>
+                    <Input
+                      name="age"
+                      type="number"
+                      value={tempProfile.age}
+                      onChange={handleInputChange}
+                      placeholder="Age"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Height (cm)</label>
+                    <Input
+                      name="height"
+                      type="number"
+                      value={tempProfile.height}
+                      onChange={handleInputChange}
+                      placeholder="Height"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Weight (kg)</label>
+                    <Input
+                      name="weight"
+                      type="number"
+                      value={tempProfile.weight}
+                      onChange={handleInputChange}
+                      placeholder="Weight"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Fitness Level</label>
+                    <Select 
+                      value={tempProfile.fitness_level}
+                      onValueChange={(value) => handleSelectChange('fitness_level', value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select level" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="beginner">Beginner</SelectItem>
+                        <SelectItem value="intermediate">Intermediate</SelectItem>
+                        <SelectItem value="advanced">Advanced</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Fitness Goal</label>
+                    <Select 
+                      value={tempProfile.fitness_goal}
+                      onValueChange={(value) => handleSelectChange('fitness_goal', value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select goal" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="weight_loss">Weight Loss</SelectItem>
+                        <SelectItem value="muscle_gain">Muscle Gain</SelectItem>
+                        <SelectItem value="endurance">Endurance</SelectItem>
+                        <SelectItem value="flexibility">Flexibility</SelectItem>
+                        <SelectItem value="general_fitness">General Fitness</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-wrap gap-4 mb-4 text-sm text-gray-600">
+                  {profile.age && (
+                    <div className="flex items-center">
+                      <Calendar className="h-4 w-4 mr-1 text-purple-600" />
+                      <span>{profile.age} years</span>
+                    </div>
+                  )}
+                  
+                  {profile.height && (
+                    <div className="flex items-center">
+                      <Ruler className="h-4 w-4 mr-1 text-purple-600" />
+                      <span>{profile.height} cm</span>
+                    </div>
+                  )}
+                  
+                  {profile.weight && (
+                    <div className="flex items-center">
+                      <Weight className="h-4 w-4 mr-1 text-purple-600" />
+                      <span>{profile.weight} kg</span>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
             
             <div className="mt-4 md:mt-0">
-              <button className="flex items-center text-sm text-gray-600 hover:text-purple-600">
-                <Settings size={16} className="mr-1" />
-                Edit Profile
-              </button>
+              {editMode ? (
+                <div className="flex space-x-2">
+                  <Button 
+                    onClick={handleSaveProfile} 
+                    className="flex items-center text-sm"
+                    disabled={loading}
+                  >
+                    <Save size={16} className="mr-1" />
+                    Save
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={handleEditToggle}
+                    className="flex items-center text-sm"
+                    disabled={loading}
+                  >
+                    <X size={16} className="mr-1" />
+                    Cancel
+                  </Button>
+                </div>
+              ) : (
+                <Button 
+                  variant="outline" 
+                  onClick={handleEditToggle}
+                  className="flex items-center text-sm"
+                >
+                  <Settings size={16} className="mr-1" />
+                  Edit Profile
+                </Button>
+              )}
             </div>
           </div>
           
@@ -106,6 +409,7 @@ const ProfilePage = () => {
                   </div>
                 </div>
                 
+                {/* Keep existing activity items */}
                 {/* Activity Item 2 */}
                 <div className="bg-white rounded-lg border p-4">
                   <div className="flex items-center">
@@ -145,6 +449,7 @@ const ProfilePage = () => {
               </div>
             </TabsContent>
             
+            {/* Keep existing tabs content */}
             <TabsContent value="progress" className="mt-6">
               <h2 className="text-xl font-semibold mb-4">Your Progress</h2>
               
