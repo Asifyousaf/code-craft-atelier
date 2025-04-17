@@ -4,6 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Check } from 'lucide-react';
+import { motion } from "framer-motion";
 
 interface AvatarSelectorProps {
   selectedAvatar: string;
@@ -30,21 +31,34 @@ const AvatarSelector: React.FC<AvatarSelectorProps> = ({ selectedAvatar, onSelec
         className="grid grid-cols-3 gap-4"
       >
         {AVATAR_OPTIONS.map((avatar) => (
-          <div key={avatar.id} className="flex flex-col items-center space-y-2">
+          <motion.div 
+            key={avatar.id} 
+            className="flex flex-col items-center space-y-2"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+          >
             <div className="relative">
               <Label 
                 htmlFor={avatar.id} 
                 className="cursor-pointer flex flex-col items-center space-y-2"
               >
                 <div className="relative">
-                  <Avatar className={`h-20 w-20 transition-all transform hover:scale-110 ${selectedAvatar === avatar.url ? 'ring-4 ring-purple-600 ring-offset-2' : 'border-2 border-gray-200 hover:border-purple-300'}`}>
+                  <Avatar className={`h-20 w-20 transition-all transform ${selectedAvatar === avatar.url ? 'ring-4 ring-purple-600 ring-offset-2' : 'border-2 border-gray-200 hover:border-purple-300'}`}>
                     <AvatarImage src={avatar.url} alt="Avatar option" />
                     <AvatarFallback>?</AvatarFallback>
                   </Avatar>
                   {selectedAvatar === avatar.url && (
-                    <div className="absolute -top-2 -right-2 bg-purple-600 text-white rounded-full p-1">
+                    <motion.div 
+                      className="absolute -top-2 -right-2 bg-purple-600 text-white rounded-full p-1"
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ type: "spring", stiffness: 500, damping: 15 }}
+                    >
                       <Check className="h-4 w-4" />
-                    </div>
+                    </motion.div>
                   )}
                 </div>
                 <RadioGroupItem 
@@ -54,7 +68,7 @@ const AvatarSelector: React.FC<AvatarSelectorProps> = ({ selectedAvatar, onSelec
                 />
               </Label>
             </div>
-          </div>
+          </motion.div>
         ))}
       </RadioGroup>
     </div>

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, Settings, Activity, Award, Heart, MessageSquare, Calendar, ChevronRight, Edit, Save, X, Ruler, Weight } from 'lucide-react';
@@ -30,8 +29,8 @@ interface ProfileData {
 const ProfilePage = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  const [session, setSession] = useState<any>(null);
-  const [profile, setProfile] = useState<ProfileData>({
+  const [session, setSession<any>(null);
+  const [profile, setProfile<ProfileData>({
     id: '',
     full_name: '',
     age: null,
@@ -45,8 +44,8 @@ const ProfilePage = () => {
     updated_at: null
   });
   
-  const [editMode, setEditMode] = useState(false);
-  const [tempProfile, setTempProfile] = useState<ProfileData>({
+  const [editMode, setEditMode(false);
+  const [tempProfile, setTempProfile<ProfileData>({
     id: '',
     full_name: '',
     age: null,
@@ -60,7 +59,7 @@ const ProfilePage = () => {
     updated_at: null
   });
   
-  const [showAvatarSelector, setShowAvatarSelector] = useState(false);
+  const [showAvatarSelector, setShowAvatarSelector(false);
 
   useEffect(() => {
     const getSession = async () => {
@@ -139,6 +138,8 @@ const ProfilePage = () => {
     } else {
       // Start editing
       setEditMode(true);
+      // Show avatar selector when entering edit mode
+      setShowAvatarSelector(true);
     }
   };
 
@@ -162,7 +163,6 @@ const ProfilePage = () => {
       ...prev,
       avatar_url: avatarUrl
     }));
-    setShowAvatarSelector(false);
   };
 
   const handleSaveProfile = async () => {
