@@ -1,9 +1,8 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { Play, Pause, SkipForward, ChevronRight, Check, XCircle, Clock, Dumbbell, Flame } from 'lucide-react';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "@/components/ui/use-toast";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
