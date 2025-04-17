@@ -1,9 +1,100 @@
 
+import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Play, Utensils, Dumbbell, Activity, MessageSquare, Trophy, Check, Users, Heart } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { supabase } from "@/integrations/supabase/client";
 import Layout from '../components/Layout';
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { toast } from "@/components/ui/use-toast";
 
 const Index = () => {
+  const [session, setSession] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [dashboardData, setDashboardData] = useState({
+    steps: 0,
+    caloriesBurned: 0,
+    mindfulMinutes: 0,
+    stepsTarget: 10000,
+    caloriesTarget: 600,
+    mindfulTarget: 60
+  });
+  const navigate = useNavigate();
+  
+  // Check for user session
+  useEffect(() => {
+    const getSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setSession(session);
+      setLoading(false);
+      
+      if (session) {
+        fetchUserDashboardData(session.user.id);
+      }
+    };
+    
+    getSession();
+    
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      if (session) {
+        fetchUserDashboardData(session.user.id);
+      }
+    });
+    
+    return () => subscription.unsubscribe();
+  }, []);
+  
+  // Fetch user dashboard data
+  const fetchUserDashboardData = async (userId: string) => {
+    try {
+      // Get today's date in YYYY-MM-DD format
+      const today = new Date().toISOString().split('T')[0];
+      
+      // Fetch workout data for today
+      const { data: workouts, error: workoutsError } = await supabase
+        .from('workouts')
+        .select('calories_burned, duration')
+        .eq('user_id', userId)
+        .eq('date', today);
+      
+      if (workoutsError) throw workoutsError;
+      
+      // Calculate total calories burned from workouts
+      const totalCaloriesBurned = workouts?.reduce((sum, workout) => sum + (workout.calories_burned || 0), 0) || 0;
+      
+      // For steps, we'll simulate based on calories (in a real app, you might have a steps table)
+      const estimatedSteps = Math.round(totalCaloriesBurned * 15); // rough estimate: 15 steps per calorie
+      
+      // For mindfulness, we'll assume we have no real data yet
+      const mindfulMinutes = 0;
+      
+      setDashboardData({
+        steps: estimatedSteps,
+        caloriesBurned: totalCaloriesBurned,
+        mindfulMinutes: mindfulMinutes,
+        stepsTarget: 10000,
+        caloriesTarget: 600,
+        mindfulTarget: 60
+      });
+    } catch (error) {
+      console.error("Error fetching dashboard data:", error);
+    }
+  };
+  
+  const handleStartJourney = () => {
+    if (session) {
+      navigate('/workouts');
+    } else {
+      toast({
+        title: "Sign in required",
+        description: "Please sign in to start your wellness journey",
+        variant: "default",
+      });
+      navigate('/auth');
+    }
+  };
+
   return (
     <Layout>
       {/* Hero Section */}
@@ -13,10 +104,13 @@ const Index = () => {
           <p className="text-lg md:text-xl max-w-2xl mx-auto mb-8">
             Your personalized journey to wellness starts here. AI-powered health coaching, customized meal plans, and mindful living.
           </p>
-          <button className="bg-white text-purple-600 px-6 py-3 rounded-full font-medium hover:bg-gray-100 transition-colors flex items-center mx-auto">
+          <Button 
+            onClick={handleStartJourney}
+            className="bg-white text-purple-600 px-6 py-3 rounded-full font-medium hover:bg-gray-100 transition-colors flex items-center mx-auto"
+          >
             <Play size={18} className="mr-2" />
             Start Your Journey
-          </button>
+          </Button>
         </div>
       </section>
 
@@ -70,118 +164,78 @@ const Index = () => {
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Dashboard Widget 1 */}
-            <div className="bg-white p-6 rounded-lg shadow-md">
+            <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-300">
               <div className="flex items-center mb-2">
                 <Activity className="h-5 w-5 text-purple-600 mr-2" />
                 <h3 className="text-sm text-gray-600">Steps Today</h3>
               </div>
-              <p className="text-2xl font-bold">8,432</p>
-              <p className="text-sm text-gray-500">Target: 10,000</p>
+              <p className="text-2xl font-bold">{dashboardData.steps.toLocaleString()}</p>
+              <p className="text-sm text-gray-500">Target: {dashboardData.stepsTarget.toLocaleString()}</p>
               <div className="mt-3 bg-gray-200 h-2 rounded-full">
-                <div className="bg-purple-600 h-2 rounded-full" style={{ width: '84%' }}></div>
+                <div 
+                  className="bg-purple-600 h-2 rounded-full transition-all duration-1000 ease-out" 
+                  style={{ width: `${Math.min(100, (dashboardData.steps / dashboardData.stepsTarget) * 100)}%` }}
+                ></div>
               </div>
+              {session ? (
+                <div className="mt-2 text-xs text-right text-gray-500">
+                  {Math.round((dashboardData.steps / dashboardData.stepsTarget) * 100)}% of daily goal
+                </div>
+              ) : (
+                <div className="mt-2 text-xs text-center text-purple-600">
+                  <Link to="/auth">Sign in to track your progress</Link>
+                </div>
+              )}
             </div>
 
             {/* Dashboard Widget 2 */}
-            <div className="bg-white p-6 rounded-lg shadow-md">
+            <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-300">
               <div className="flex items-center mb-2">
                 <Activity className="h-5 w-5 text-purple-600 mr-2" />
                 <h3 className="text-sm text-gray-600">Calories Burned</h3>
               </div>
-              <p className="text-2xl font-bold">487</p>
-              <p className="text-sm text-gray-500">Target: 600</p>
+              <p className="text-2xl font-bold">{dashboardData.caloriesBurned}</p>
+              <p className="text-sm text-gray-500">Target: {dashboardData.caloriesTarget}</p>
               <div className="mt-3 bg-gray-200 h-2 rounded-full">
-                <div className="bg-purple-600 h-2 rounded-full" style={{ width: '81%' }}></div>
+                <div 
+                  className="bg-purple-600 h-2 rounded-full transition-all duration-1000 ease-out" 
+                  style={{ width: `${Math.min(100, (dashboardData.caloriesBurned / dashboardData.caloriesTarget) * 100)}%` }}
+                ></div>
               </div>
+              {session ? (
+                <div className="mt-2 text-xs text-right text-gray-500">
+                  {Math.round((dashboardData.caloriesBurned / dashboardData.caloriesTarget) * 100)}% of daily goal
+                </div>
+              ) : (
+                <div className="mt-2 text-xs text-center text-purple-600">
+                  <Link to="/auth">Sign in to track your progress</Link>
+                </div>
+              )}
             </div>
 
             {/* Dashboard Widget 3 */}
-            <div className="bg-white p-6 rounded-lg shadow-md">
+            <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-300">
               <div className="flex items-center mb-2">
                 <Heart className="h-5 w-5 text-purple-600 mr-2" />
                 <h3 className="text-sm text-gray-600">Mindfulness</h3>
               </div>
-              <p className="text-2xl font-bold">35</p>
-              <p className="text-sm text-gray-500">Target: 60 mins</p>
+              <p className="text-2xl font-bold">{dashboardData.mindfulMinutes}</p>
+              <p className="text-sm text-gray-500">Target: {dashboardData.mindfulTarget} mins</p>
               <div className="mt-3 bg-gray-200 h-2 rounded-full">
-                <div className="bg-purple-600 h-2 rounded-full" style={{ width: '58%' }}></div>
+                <div 
+                  className="bg-purple-600 h-2 rounded-full transition-all duration-1000 ease-out" 
+                  style={{ width: `${Math.min(100, (dashboardData.mindfulMinutes / dashboardData.mindfulTarget) * 100)}%` }}
+                ></div>
               </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Customize Dashboard Section */}
-      <section className="py-16 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <h2 className="text-2xl md:text-3xl font-bold mb-4 text-center">Customize Your Dashboard</h2>
-          <p className="text-center text-gray-600 mb-8">Drag and drop widgets to personalize your wellness journey</p>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Widget 1 */}
-            <div className="bg-white p-6 rounded-lg shadow-md">
-              <div className="flex items-center mb-4">
-                <Activity className="h-5 w-5 text-purple-600 mr-2" />
-                <h3 className="text-sm font-medium">Daily Stats</h3>
-              </div>
-              <div className="text-center text-gray-400 py-8">
-                Widget Content
-              </div>
-            </div>
-
-            {/* Widget 2 */}
-            <div className="bg-white p-6 rounded-lg shadow-md">
-              <div className="flex items-center mb-4">
-                <Activity className="h-5 w-5 text-purple-600 mr-2" />
-                <h3 className="text-sm font-medium">Calories</h3>
-              </div>
-              <div className="text-center text-gray-400 py-8">
-                Widget Content
-              </div>
-            </div>
-
-            {/* Widget 3 */}
-            <div className="bg-white p-6 rounded-lg shadow-md">
-              <div className="flex items-center mb-4">
-                <Heart className="h-5 w-5 text-purple-600 mr-2" />
-                <h3 className="text-sm font-medium">Mindfulness</h3>
-              </div>
-              <div className="text-center text-gray-400 py-8">
-                Widget Content
-              </div>
-            </div>
-
-            {/* Widget 4 */}
-            <div className="bg-white p-6 rounded-lg shadow-md">
-              <div className="flex items-center mb-4">
-                <Utensils className="h-5 w-5 text-purple-600 mr-2" />
-                <h3 className="text-sm font-medium">Nutrition</h3>
-              </div>
-              <div className="text-center text-gray-400 py-8">
-                Widget Content
-              </div>
-            </div>
-
-            {/* Widget 5 */}
-            <div className="bg-white p-6 rounded-lg shadow-md">
-              <div className="flex items-center mb-4">
-                <Dumbbell className="h-5 w-5 text-purple-600 mr-2" />
-                <h3 className="text-sm font-medium">Workout</h3>
-              </div>
-              <div className="text-center text-gray-400 py-8">
-                Widget Content
-              </div>
-            </div>
-
-            {/* Widget 6 */}
-            <div className="bg-white p-6 rounded-lg shadow-md">
-              <div className="flex items-center mb-4">
-                <Heart className="h-5 w-5 text-purple-600 mr-2" />
-                <h3 className="text-sm font-medium">Health</h3>
-              </div>
-              <div className="text-center text-gray-400 py-8">
-                Widget Content
-              </div>
+              {session ? (
+                <div className="mt-2 text-xs text-right text-gray-500">
+                  {Math.round((dashboardData.mindfulMinutes / dashboardData.mindfulTarget) * 100)}% of daily goal
+                </div>
+              ) : (
+                <div className="mt-2 text-xs text-center text-purple-600">
+                  <Link to="/auth">Sign in to track your progress</Link>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -224,7 +278,7 @@ const Index = () => {
           
           {/* Testimonials */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-white p-6 rounded-lg shadow-md">
+            <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-300">
               <div className="flex items-center mb-4">
                 <div className="h-12 w-12 rounded-full bg-purple-200 mr-3 overflow-hidden">
                   <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="Sarah Johnson" className="h-full w-full object-cover" />
@@ -239,7 +293,7 @@ const Index = () => {
               </p>
             </div>
             
-            <div className="bg-white p-6 rounded-lg shadow-md">
+            <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-300">
               <div className="flex items-center mb-4">
                 <div className="h-12 w-12 rounded-full bg-purple-200 mr-3 overflow-hidden">
                   <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Michael Chen" className="h-full w-full object-cover" />
@@ -254,7 +308,7 @@ const Index = () => {
               </p>
             </div>
             
-            <div className="bg-white p-6 rounded-lg shadow-md">
+            <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-300">
               <div className="flex items-center mb-4">
                 <div className="h-12 w-12 rounded-full bg-purple-200 mr-3 overflow-hidden">
                   <img src="https://randomuser.me/api/portraits/women/68.jpg" alt="Emma Davis" className="h-full w-full object-cover" />
