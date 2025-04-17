@@ -1,8 +1,9 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { Play, Pause, SkipForward, ChevronRight, Check, XCircle, Clock, Dumbbell, Flame } from 'lucide-react';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "@/components/ui/use-toast";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
@@ -197,21 +198,34 @@ const WorkoutSession = ({ workout, onComplete, onCancel }: WorkoutSessionProps) 
   };
 
   const handleComplete = async () => {
-    // Calculate calories based on time spent
-    const minutesSpent = Math.round(totalTimeElapsed / 60);
-    // Ensure at least some calories are counted even if completed quickly
-    const estimatedCalories = Math.max(
-      Math.round(workout.caloriesBurn * (minutesSpent / workout.duration)),
-      Math.round(workout.caloriesBurn * 0.5) // At least 50% of expected calories
+    // Calculate calories based on progress and time spent
+    const minutesSpent = Math.max(Math.round(totalTimeElapsed / 60), 1); // Ensure at least 1 minute
+    
+    // Calculate calories based on completion percentage and minimum threshold
+    const completionPercentage = completedExercises / totalExercises;
+    const minCaloriePercentage = 0.3; // Minimum 30% of calories even if just started
+    
+    // Calculate estimated calories - ensures some calories are counted even if completed early
+    const estimatedCalories = Math.round(
+      workout.caloriesBurn * Math.max(
+        completionPercentage,
+        Math.min(minutesSpent / workout.duration, 1),
+        minCaloriePercentage
+      )
     );
     
     // Updated to match database schema - only include fields that exist in the workouts table
     const workoutData = {
       title: workout.title,
       type: workout.type,
-      duration: Math.max(minutesSpent, 1), // Ensure at least 1 minute is recorded
+      duration: minutesSpent,
       calories_burned: estimatedCalories
     };
+    
+    toast({
+      title: "Workout Complete!",
+      description: `You burned approximately ${estimatedCalories} calories in ${minutesSpent} minutes.`,
+    });
     
     onComplete(workoutData);
   };

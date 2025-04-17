@@ -3,6 +3,7 @@ import React from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { Check } from 'lucide-react';
 
 interface AvatarSelectorProps {
   selectedAvatar: string;
@@ -30,20 +31,29 @@ const AvatarSelector: React.FC<AvatarSelectorProps> = ({ selectedAvatar, onSelec
       >
         {AVATAR_OPTIONS.map((avatar) => (
           <div key={avatar.id} className="flex flex-col items-center space-y-2">
-            <Label 
-              htmlFor={avatar.id} 
-              className="cursor-pointer flex flex-col items-center space-y-2"
-            >
-              <Avatar className={`h-16 w-16 border-2 ${selectedAvatar === avatar.url ? 'border-purple-600' : 'border-transparent'}`}>
-                <AvatarImage src={avatar.url} alt="Avatar option" />
-                <AvatarFallback>?</AvatarFallback>
-              </Avatar>
-              <RadioGroupItem 
-                value={avatar.url} 
-                id={avatar.id} 
-                className="sr-only" 
-              />
-            </Label>
+            <div className="relative">
+              <Label 
+                htmlFor={avatar.id} 
+                className="cursor-pointer flex flex-col items-center space-y-2"
+              >
+                <div className="relative">
+                  <Avatar className={`h-20 w-20 transition-all transform hover:scale-110 ${selectedAvatar === avatar.url ? 'ring-4 ring-purple-600 ring-offset-2' : 'border-2 border-gray-200 hover:border-purple-300'}`}>
+                    <AvatarImage src={avatar.url} alt="Avatar option" />
+                    <AvatarFallback>?</AvatarFallback>
+                  </Avatar>
+                  {selectedAvatar === avatar.url && (
+                    <div className="absolute -top-2 -right-2 bg-purple-600 text-white rounded-full p-1">
+                      <Check className="h-4 w-4" />
+                    </div>
+                  )}
+                </div>
+                <RadioGroupItem 
+                  value={avatar.url} 
+                  id={avatar.id} 
+                  className="sr-only" 
+                />
+              </Label>
+            </div>
           </div>
         ))}
       </RadioGroup>
