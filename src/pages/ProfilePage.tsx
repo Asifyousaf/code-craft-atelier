@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, Settings, Activity, Award, Heart, MessageSquare, Calendar, ChevronRight, Edit, Save, X, Ruler, Weight } from 'lucide-react';
@@ -38,7 +39,7 @@ const ProfilePage = () => {
     weight: null,
     fitness_level: '',
     fitness_goal: '',
-    avatar_url: 'https://randomuser.me/api/portraits/women/44.jpg', // Default avatar
+    avatar_url: 'https://img.freepik.com/premium-vector/fitness-trainer-avatar-fitness-trainer-icon-vector-illustration_564659-259.jpg', // Default avatar
     username: null,
     created_at: null,
     updated_at: null
@@ -53,7 +54,7 @@ const ProfilePage = () => {
     weight: null,
     fitness_level: '',
     fitness_goal: '',
-    avatar_url: 'https://randomuser.me/api/portraits/women/44.jpg', // Default avatar
+    avatar_url: 'https://img.freepik.com/premium-vector/fitness-trainer-avatar-fitness-trainer-icon-vector-illustration_564659-259.jpg', // Default avatar
     username: null,
     created_at: null,
     updated_at: null
@@ -110,7 +111,7 @@ const ProfilePage = () => {
           weight: data.weight,
           fitness_level: data.fitness_level || '',
           fitness_goal: data.fitness_goal || '',
-          avatar_url: data.avatar_url || 'https://randomuser.me/api/portraits/women/44.jpg',
+          avatar_url: data.avatar_url || 'https://img.freepik.com/premium-vector/fitness-trainer-avatar-fitness-trainer-icon-vector-illustration_564659-259.jpg',
           username: data.username,
           created_at: data.created_at,
           updated_at: data.updated_at
@@ -407,7 +408,7 @@ const ProfilePage = () => {
               <div className="text-purple-600 mb-1">
                 <Activity size={24} className="inline" />
               </div>
-              <p className="text-2xl font-bold">247</p>
+              <p className="text-2xl font-bold">0</p>
               <p className="text-xs text-gray-500">Workouts Completed</p>
             </div>
             
@@ -415,7 +416,7 @@ const ProfilePage = () => {
               <div className="text-purple-600 mb-1">
                 <Award size={24} className="inline" />
               </div>
-              <p className="text-2xl font-bold">15</p>
+              <p className="text-2xl font-bold">0</p>
               <p className="text-xs text-gray-500">Achievements</p>
             </div>
             
@@ -423,7 +424,7 @@ const ProfilePage = () => {
               <div className="text-purple-600 mb-1">
                 <Heart size={24} className="inline" />
               </div>
-              <p className="text-2xl font-bold">87</p>
+              <p className="text-2xl font-bold">0</p>
               <p className="text-xs text-gray-500">Favorites</p>
             </div>
             
@@ -431,7 +432,7 @@ const ProfilePage = () => {
               <div className="text-purple-600 mb-1">
                 <MessageSquare size={24} className="inline" />
               </div>
-              <p className="text-2xl font-bold">124</p>
+              <p className="text-2xl font-bold">0</p>
               <p className="text-xs text-gray-500">Community Posts</p>
             </div>
           </div>
@@ -449,57 +450,16 @@ const ProfilePage = () => {
               <h2 className="text-xl font-semibold mb-4">Recent Activity</h2>
               
               <div className="space-y-4">
-                {/* Activity Item 1 */}
-                <div className="bg-white rounded-lg border p-4">
-                  <div className="flex items-center">
-                    <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center mr-3">
-                      <Dumbbell className="h-5 w-5 text-purple-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-medium">Completed a workout</h3>
-                      <p className="text-sm text-gray-500">Full Body HIIT • Today, 9:30 AM</p>
-                    </div>
-                    <div className="ml-auto">
-                      <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">+120 points</span>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Activity Item 2 */}
-                <div className="bg-white rounded-lg border p-4">
-                  <div className="flex items-center">
-                    <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mr-3">
-                      <Award className="h-5 w-5 text-blue-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-medium">Earned achievement</h3>
-                      <p className="text-sm text-gray-500">Early Bird • Yesterday, 6:15 AM</p>
-                    </div>
-                    <div className="ml-auto">
-                      <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">Achievement</span>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Activity Item 3 */}
-                <div className="bg-white rounded-lg border p-4">
-                  <div className="flex items-center">
-                    <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center mr-3">
-                      <Utensils className="h-5 w-5 text-green-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-medium">Meal plan updated</h3>
-                      <p className="text-sm text-gray-500">Added Mediterranean meal plan • 2 days ago</p>
-                    </div>
-                    <div className="ml-auto">
-                      <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">Nutrition</span>
-                    </div>
-                  </div>
+                {/* Empty state */}
+                <div className="py-8 text-center bg-gray-50 rounded-lg border">
+                  <Activity size={32} className="text-gray-400 mx-auto mb-3" />
+                  <h3 className="text-lg font-medium text-gray-600">No Activity Yet</h3>
+                  <p className="text-gray-500 text-sm mt-1">Complete workouts to track your progress</p>
                 </div>
                 
                 {/* View All Button */}
                 <button className="w-full py-3 text-center text-purple-600 hover:text-purple-800 text-sm font-medium">
-                  View All Activity
+                  Start Your First Workout
                 </button>
               </div>
             </TabsContent>
@@ -507,12 +467,14 @@ const ProfilePage = () => {
             <TabsContent value="progress" className="mt-6">
               <h2 className="text-xl font-semibold mb-4">Your Progress</h2>
               
-              {/* Progress Charts Would Go Here */}
-              <div className="bg-white rounded-lg border p-6 mb-4">
-                <h3 className="text-lg font-medium mb-4">Weekly Activity</h3>
-                <div className="h-64 bg-gray-100 flex items-center justify-center">
-                  <p className="text-gray-500">Progress Chart Placeholder</p>
+              {/* Empty progress state */}
+              <div className="bg-white rounded-lg border p-8 text-center mb-4">
+                <div className="h-40 w-40 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Activity size={64} className="text-gray-300" />
                 </div>
+                <h3 className="text-lg font-medium mb-2">No Progress Data Yet</h3>
+                <p className="text-gray-500 mb-4">Complete workouts to see your progress charts</p>
+                <Button className="bg-purple-600">Start Tracking</Button>
               </div>
               
               {/* Progress Stats */}
@@ -523,28 +485,28 @@ const ProfilePage = () => {
                     <div>
                       <div className="flex justify-between text-sm mb-1">
                         <span>Weekly Workouts</span>
-                        <span className="font-medium">3/4 completed</span>
+                        <span className="font-medium">0/4 completed</span>
                       </div>
                       <div className="w-full bg-gray-200 h-2 rounded-full">
-                        <div className="bg-purple-600 h-2 rounded-full" style={{ width: '75%' }}></div>
+                        <div className="bg-purple-600 h-2 rounded-full" style={{ width: '0%' }}></div>
                       </div>
                     </div>
                     <div>
                       <div className="flex justify-between text-sm mb-1">
                         <span>Step Goal</span>
-                        <span className="font-medium">8,540/10,000 steps</span>
+                        <span className="font-medium">0/10,000 steps</span>
                       </div>
                       <div className="w-full bg-gray-200 h-2 rounded-full">
-                        <div className="bg-purple-600 h-2 rounded-full" style={{ width: '85%' }}></div>
+                        <div className="bg-purple-600 h-2 rounded-full" style={{ width: '0%' }}></div>
                       </div>
                     </div>
                     <div>
                       <div className="flex justify-between text-sm mb-1">
                         <span>Mindfulness Minutes</span>
-                        <span className="font-medium">45/60 minutes</span>
+                        <span className="font-medium">0/60 minutes</span>
                       </div>
                       <div className="w-full bg-gray-200 h-2 rounded-full">
-                        <div className="bg-purple-600 h-2 rounded-full" style={{ width: '75%' }}></div>
+                        <div className="bg-purple-600 h-2 rounded-full" style={{ width: '0%' }}></div>
                       </div>
                     </div>
                   </div>
@@ -558,21 +520,21 @@ const ProfilePage = () => {
                         <Calendar className="h-5 w-5 text-purple-600 mr-2" />
                         <span>Workout Streak</span>
                       </div>
-                      <span className="font-medium">14 days</span>
+                      <span className="font-medium">0 days</span>
                     </li>
                     <li className="flex items-center justify-between">
                       <div className="flex items-center">
                         <Heart className="h-5 w-5 text-purple-600 mr-2" />
                         <span>Meditation Streak</span>
                       </div>
-                      <span className="font-medium">7 days</span>
+                      <span className="font-medium">0 days</span>
                     </li>
                     <li className="flex items-center justify-between">
                       <div className="flex items-center">
                         <Utensils className="h-5 w-5 text-purple-600 mr-2" />
                         <span>Meal Logging</span>
                       </div>
-                      <span className="font-medium">21 days</span>
+                      <span className="font-medium">0 days</span>
                     </li>
                   </ul>
                 </div>
@@ -583,83 +545,16 @@ const ProfilePage = () => {
               <h2 className="text-xl font-semibold mb-4">Your Wellness Plans</h2>
               
               <div className="space-y-4">
-                {/* Active Plans */}
-                <div className="bg-white rounded-lg border p-4">
-                  <h3 className="font-medium mb-3">Active Plans</h3>
-                  
-                  <div className="space-y-3">
-                    {/* Plan 1 */}
-                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <div className="flex items-center">
-                        <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center mr-3">
-                          <Dumbbell className="h-5 w-5 text-purple-600" />
-                        </div>
-                        <div>
-                          <h4 className="font-medium">12-Week Strength Training</h4>
-                          <p className="text-xs text-gray-500">Week 6 of 12 • 50% Complete</p>
-                        </div>
-                      </div>
-                      <ChevronRight className="h-5 w-5 text-gray-400" />
-                    </div>
-                    
-                    {/* Plan 2 */}
-                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <div className="flex items-center">
-                        <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center mr-3">
-                          <Utensils className="h-5 w-5 text-green-600" />
-                        </div>
-                        <div>
-                          <h4 className="font-medium">Mediterranean Diet Plan</h4>
-                          <p className="text-xs text-gray-500">Week 2 of 8 • 25% Complete</p>
-                        </div>
-                      </div>
-                      <ChevronRight className="h-5 w-5 text-gray-400" />
-                    </div>
-                  </div>
+                {/* Empty state */}
+                <div className="py-8 text-center bg-gray-50 rounded-lg border">
+                  <Dumbbell size={32} className="text-gray-400 mx-auto mb-3" />
+                  <h3 className="text-lg font-medium text-gray-600">No Active Plans</h3>
+                  <p className="text-gray-500 text-sm mt-1">Enroll in a plan to start your fitness journey</p>
                 </div>
                 
-                {/* Recommended Plans */}
-                <div className="bg-white rounded-lg border p-4">
-                  <h3 className="font-medium mb-3">Recommended for You</h3>
-                  
-                  <div className="space-y-3">
-                    {/* Recommendation 1 */}
-                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <div className="flex items-center">
-                        <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mr-3">
-                          <Heart className="h-5 w-5 text-blue-600" />
-                        </div>
-                        <div>
-                          <h4 className="font-medium">30-Day Mindfulness Challenge</h4>
-                          <p className="text-xs text-gray-500">Based on your meditation interests</p>
-                        </div>
-                      </div>
-                      <button className="text-xs bg-purple-600 text-white px-3 py-1 rounded-full">
-                        Start
-                      </button>
-                    </div>
-                    
-                    {/* Recommendation 2 */}
-                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <div className="flex items-center">
-                        <div className="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center mr-3">
-                          <Activity className="h-5 w-5 text-yellow-600" />
-                        </div>
-                        <div>
-                          <h4 className="font-medium">HIIT Cardio Program</h4>
-                          <p className="text-xs text-gray-500">Perfect complement to your strength training</p>
-                        </div>
-                      </div>
-                      <button className="text-xs bg-purple-600 text-white px-3 py-1 rounded-full">
-                        Start
-                      </button>
-                    </div>
-                  </div>
-                </div>
-                
-                <button className="w-full py-3 text-center text-purple-600 hover:text-purple-800 text-sm font-medium">
-                  Browse All Plans
-                </button>
+                <Button className="w-full bg-purple-600">
+                  Browse Available Plans
+                </Button>
               </div>
             </TabsContent>
             
@@ -667,25 +562,37 @@ const ProfilePage = () => {
               <h2 className="text-xl font-semibold mb-4">Your Achievements</h2>
               
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                {/* Achievement 1 */}
-                <div className="bg-white border rounded-lg p-4 text-center">
-                  <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <Award className="h-8 w-8 text-purple-600" />
+                {/* Locked Achievement 1 */}
+                <div className="bg-white border rounded-lg p-4 text-center bg-gray-50">
+                  <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <Award className="h-8 w-8 text-gray-400" />
                   </div>
-                  <h3 className="font-medium text-sm">Early Bird</h3>
-                  <p className="text-xs text-gray-500 mt-1">Complete 10 workouts before 8 AM</p>
+                  <h3 className="font-medium text-sm text-gray-400">Early Bird</h3>
+                  <p className="text-xs text-gray-400 mt-1">Complete 10 workouts before 8 AM</p>
+                  <div className="mt-2">
+                    <div className="w-full bg-gray-200 h-1 rounded-full">
+                      <div className="bg-purple-600 h-1 rounded-full" style={{ width: '0%' }}></div>
+                    </div>
+                    <p className="text-xs text-gray-400 mt-1">0% complete</p>
+                  </div>
                 </div>
                 
-                {/* Achievement 2 */}
-                <div className="bg-white border rounded-lg p-4 text-center">
-                  <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <Award className="h-8 w-8 text-blue-600" />
+                {/* Locked Achievement 2 */}
+                <div className="bg-white border rounded-lg p-4 text-center bg-gray-50">
+                  <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <Award className="h-8 w-8 text-gray-400" />
                   </div>
-                  <h3 className="font-medium text-sm">Zen Master</h3>
-                  <p className="text-xs text-gray-500 mt-1">Complete 30 meditation sessions</p>
+                  <h3 className="font-medium text-sm text-gray-400">Zen Master</h3>
+                  <p className="text-xs text-gray-400 mt-1">Complete 30 meditation sessions</p>
+                  <div className="mt-2">
+                    <div className="w-full bg-gray-200 h-1 rounded-full">
+                      <div className="bg-purple-600 h-1 rounded-full" style={{ width: '0%' }}></div>
+                    </div>
+                    <p className="text-xs text-gray-400 mt-1">0% complete</p>
+                  </div>
                 </div>
                 
-                {/* Achievement 3 */}
+                {/* Locked Achievement 3 */}
                 <div className="bg-white border rounded-lg p-4 text-center bg-gray-50">
                   <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-3">
                     <Award className="h-8 w-8 text-gray-400" />
@@ -694,13 +601,13 @@ const ProfilePage = () => {
                   <p className="text-xs text-gray-400 mt-1">Run your first 26.2 miles</p>
                   <div className="mt-2">
                     <div className="w-full bg-gray-200 h-1 rounded-full">
-                      <div className="bg-purple-600 h-1 rounded-full" style={{ width: '45%' }}></div>
+                      <div className="bg-purple-600 h-1 rounded-full" style={{ width: '0%' }}></div>
                     </div>
-                    <p className="text-xs text-gray-400 mt-1">45% complete</p>
+                    <p className="text-xs text-gray-400 mt-1">0% complete</p>
                   </div>
                 </div>
                 
-                {/* Achievement 4 */}
+                {/* Locked Achievement 4 */}
                 <div className="bg-white border rounded-lg p-4 text-center bg-gray-50">
                   <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-3">
                     <Award className="h-8 w-8 text-gray-400" />
@@ -709,17 +616,17 @@ const ProfilePage = () => {
                   <p className="text-xs text-gray-400 mt-1">Log 50 homemade meals</p>
                   <div className="mt-2">
                     <div className="w-full bg-gray-200 h-1 rounded-full">
-                      <div className="bg-purple-600 h-1 rounded-full" style={{ width: '70%' }}></div>
+                      <div className="bg-purple-600 h-1 rounded-full" style={{ width: '0%' }}></div>
                     </div>
-                    <p className="text-xs text-gray-400 mt-1">70% complete</p>
+                    <p className="text-xs text-gray-400 mt-1">0% complete</p>
                   </div>
                 </div>
               </div>
               
               <div className="mt-6 text-center">
-                <button className="border border-purple-600 text-purple-600 px-6 py-2 rounded-full hover:bg-purple-50 transition-colors">
+                <Button className="border border-purple-600 text-purple-600 px-6 py-2 bg-white hover:bg-purple-50 transition-colors">
                   View All Achievements
-                </button>
+                </Button>
               </div>
             </TabsContent>
           </Tabs>

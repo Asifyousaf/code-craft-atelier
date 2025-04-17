@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { Play, Pause, SkipForward, ChevronRight, Check, XCircle, Clock, Dumbbell, Flame } from 'lucide-react';
@@ -42,17 +41,17 @@ const formatTime = (seconds: number): string => {
 
 // Exercise illustrations
 const exerciseImages = {
-  "Jumping Jacks": "https://images.unsplash.com/photo-1599058917765-a780eda07a3e?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
-  "Push-ups": "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
-  "Air Squats": "https://images.unsplash.com/photo-1574680178050-55c6a6a96e0a?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
-  "Plank": "https://images.unsplash.com/photo-1566241142888-11138d558213?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
-  "Russian Twists": "https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
-  "Mountain Climbers": "https://images.unsplash.com/photo-1552674605-db6ffd4facb5?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
-  "Sun Salutation (Surya Namaskar)": "https://images.unsplash.com/photo-1545389336-cf090694435e?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
-  "Warrior II (Virabhadrasana II)": "https://images.unsplash.com/photo-1575052814086-f385e2e2ad1b?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
-  "Tree Pose (Vrksasana)": "https://images.unsplash.com/photo-1510894347713-fc3ed6fdf539?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+  "Jumping Jacks": "https://www.inspireusafoundation.org/wp-content/uploads/2022/11/jumping-jack-animation.gif",
+  "Push-ups": "https://thumbs.gfycat.com/GlossySkinnyDuckbillcat-max-1mb.gif",
+  "Air Squats": "https://thumbs.gfycat.com/UnlinedTerribleGermanshorthairedpointer-max-1mb.gif",
+  "Plank": "https://flabfix.com/wp-content/uploads/2019/05/Plank.gif",
+  "Russian Twists": "https://media1.tenor.com/m/8byDO_ANDxAAAAAC/exercise-russian-twist.gif",
+  "Mountain Climbers": "https://thumbs.gfycat.com/PhonyFaithfulAstrangiacoral-max-1mb.gif",
+  "Sun Salutation (Surya Namaskar)": "https://cdn.dribbble.com/users/2931468/screenshots/5720362/media/e87bb48393c8202ff31e10056bbb413c.gif",
+  "Warrior II (Virabhadrasana II)": "https://cdn.dribbble.com/users/2106177/screenshots/6834350/warrior2_dr.gif",
+  "Tree Pose (Vrksasana)": "https://www.yogadukaan.com/blog/wp-content/uploads/2023/04/Vrikshasana-basic-steps-benefits.gif",
   // Default image for exercises without specific illustrations
-  "default": "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
+  "default": "https://www.inspireusafoundation.org/wp-content/uploads/2022/03/jumping-jacks-benefits.gif"
 };
 
 const WorkoutSession = ({ workout, onComplete, onCancel }: WorkoutSessionProps) => {
@@ -200,19 +199,24 @@ const WorkoutSession = ({ workout, onComplete, onCancel }: WorkoutSessionProps) 
   const handleComplete = async () => {
     // Calculate calories based on time spent
     const minutesSpent = Math.round(totalTimeElapsed / 60);
-    const estimatedCalories = Math.round(workout.caloriesBurn * (minutesSpent / workout.duration));
+    // Ensure at least some calories are counted even if completed quickly
+    const estimatedCalories = Math.max(
+      Math.round(workout.caloriesBurn * (minutesSpent / workout.duration)),
+      Math.round(workout.caloriesBurn * 0.5) // At least 50% of expected calories
+    );
     
     // Updated to match database schema - only include fields that exist in the workouts table
     const workoutData = {
       title: workout.title,
       type: workout.type,
-      duration: minutesSpent,
+      duration: Math.max(minutesSpent, 1), // Ensure at least 1 minute is recorded
       calories_burned: estimatedCalories
     };
     
     onComplete(workoutData);
   };
 
+  
   return (
     <Card className="w-full border-2 border-purple-100">
       <CardHeader className="bg-gradient-to-r from-purple-50 to-blue-50">
@@ -249,7 +253,7 @@ const WorkoutSession = ({ workout, onComplete, onCancel }: WorkoutSessionProps) 
                 </div>
               </div>
 
-              {/* Exercise image */}
+              {/* Exercise animation/image */}
               <div className="mb-6 rounded-lg overflow-hidden shadow-md">
                 <img 
                   src={getExerciseImage(currentExercise.name)} 
