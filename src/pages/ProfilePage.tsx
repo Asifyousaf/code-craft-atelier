@@ -29,8 +29,8 @@ interface ProfileData {
 const ProfilePage = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  const [session, setSession<any>(null);
-  const [profile, setProfile<ProfileData>({
+  const [session, setSession] = useState<any>(null);
+  const [profile, setProfile] = useState<ProfileData>({
     id: '',
     full_name: '',
     age: null,
@@ -44,8 +44,8 @@ const ProfilePage = () => {
     updated_at: null
   });
   
-  const [editMode, setEditMode(false);
-  const [tempProfile, setTempProfile<ProfileData>({
+  const [editMode, setEditMode] = useState(false);
+  const [tempProfile, setTempProfile] = useState<ProfileData>({
     id: '',
     full_name: '',
     age: null,
@@ -59,7 +59,7 @@ const ProfilePage = () => {
     updated_at: null
   });
   
-  const [showAvatarSelector, setShowAvatarSelector(false);
+  const [showAvatarSelector, setShowAvatarSelector] = useState(false);
 
   useEffect(() => {
     const getSession = async () => {
