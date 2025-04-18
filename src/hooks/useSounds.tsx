@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 
 // Sound types available in the app
-type SoundType = 'meditation' | 'ambient' | 'nature' | 'chimes' | 'beep' | 'success' | 'failure';
+export type SoundType = 'meditation' | 'ambient' | 'nature' | 'chimes' | 'beep' | 'success' | 'failure' | 'notification';
 
 // Sound library with URLs
 const soundLibrary: Record<SoundType, string> = {
@@ -12,10 +12,11 @@ const soundLibrary: Record<SoundType, string> = {
   chimes: 'https://soundbible.com/mp3/Japanese%20Temple%20Bell%20Small-SoundBible.com-113624364.mp3',
   beep: 'https://soundbible.com/mp3/Electronic_Chime-KevanGC-495939803.mp3',
   success: 'https://soundbible.com/mp3/success-1-6297.mp3',
-  failure: 'https://soundbible.com/mp3/system-fault-518.mp3'
+  failure: 'https://soundbible.com/mp3/system-fault-518.mp3',
+  notification: 'https://soundbible.com/mp3/notification-sound-7062.mp3'
 };
 
-interface SoundOptions {
+export interface SoundOptions {
   volume?: number;
   loop?: boolean;
   onEnded?: () => void;
@@ -30,7 +31,8 @@ const useSounds = () => {
     chimes: false,
     beep: false,
     success: false,
-    failure: false
+    failure: false,
+    notification: false
   });
   const [isMuted, setIsMuted] = useState(false);
 
