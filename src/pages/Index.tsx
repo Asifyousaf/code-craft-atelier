@@ -1,12 +1,13 @@
 
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Play, Utensils, Dumbbell, Activity, MessageSquare, Trophy, Check, Users, Heart } from 'lucide-react';
+import { Play, Utensils, Dumbbell, Activity, MessageSquare, Trophy, Users, Heart } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import Layout from '../components/Layout';
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "@/components/ui/use-toast";
+import AISearchBox from '../components/AISearchBox';
 
 const Index = () => {
   const [session, setSession] = useState<any>(null);
@@ -111,6 +112,11 @@ const Index = () => {
             <Play size={18} className="mr-2" />
             Start Your Journey
           </Button>
+          
+          {/* AI Search Box */}
+          <div className="mt-10 max-w-xl mx-auto">
+            <AISearchBox />
+          </div>
         </div>
       </section>
 

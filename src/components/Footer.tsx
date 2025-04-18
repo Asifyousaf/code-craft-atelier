@@ -36,10 +36,10 @@ const Footer = () => {
             <div>
               <h3 className="font-bold mb-4">Company</h3>
               <ul className="space-y-2 text-sm">
-                <li><a href="#" className="text-gray-600 hover:text-purple-600">About Us</a></li>
-                <li><a href="#" className="text-gray-600 hover:text-purple-600">Careers</a></li>
-                <li><a href="#" className="text-gray-600 hover:text-purple-600">Press</a></li>
-                <li><a href="#" className="text-gray-600 hover:text-purple-600">Blog</a></li>
+                <li><Link to="/about-us" className="text-gray-600 hover:text-purple-600">About Us</Link></li>
+                <li><Link to="/careers" className="text-gray-600 hover:text-purple-600">Careers</Link></li>
+                <li><Link to="/press" className="text-gray-600 hover:text-purple-600">Press</Link></li>
+                <li><Link to="/blog" className="text-gray-600 hover:text-purple-600">Blog</Link></li>
               </ul>
             </div>
             
@@ -47,9 +47,9 @@ const Footer = () => {
             <div>
               <h3 className="font-bold mb-4">Support</h3>
               <ul className="space-y-2 text-sm">
-                <li><a href="#" className="text-gray-600 hover:text-purple-600">Help Center</a></li>
-                <li><a href="#" className="text-gray-600 hover:text-purple-600">Safety Center</a></li>
-                <li><a href="#" className="text-gray-600 hover:text-purple-600">Community Guidelines</a></li>
+                <li><Link to="/help-center" className="text-gray-600 hover:text-purple-600">Help Center</Link></li>
+                <li><Link to="/safety-center" className="text-gray-600 hover:text-purple-600">Safety Center</Link></li>
+                <li><Link to="/community-guidelines" className="text-gray-600 hover:text-purple-600">Community Guidelines</Link></li>
               </ul>
             </div>
             
@@ -57,9 +57,9 @@ const Footer = () => {
             <div>
               <h3 className="font-bold mb-4">Legal</h3>
               <ul className="space-y-2 text-sm">
-                <li><a href="#" className="text-gray-600 hover:text-purple-600">Privacy Policy</a></li>
-                <li><a href="#" className="text-gray-600 hover:text-purple-600">Terms of Service</a></li>
-                <li><a href="#" className="text-gray-600 hover:text-purple-600">Cookie Policy</a></li>
+                <li><Link to="/privacy-policy" className="text-gray-600 hover:text-purple-600">Privacy Policy</Link></li>
+                <li><Link to="/terms-of-service" className="text-gray-600 hover:text-purple-600">Terms of Service</Link></li>
+                <li><Link to="/cookie-policy" className="text-gray-600 hover:text-purple-600">Cookie Policy</Link></li>
               </ul>
             </div>
           </div>
@@ -72,13 +72,6 @@ const Footer = () => {
           </div>
         </div>
       </footer>
-
-      {/* Chat Button */}
-      <div className="fixed bottom-6 right-6">
-        <button className="bg-purple-600 text-white rounded-full p-3 shadow-lg hover:bg-purple-700 transition-colors">
-          <MessageSquare className="h-6 w-6" />
-        </button>
-      </div>
     </>
   );
 };
