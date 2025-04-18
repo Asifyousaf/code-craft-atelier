@@ -8,7 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { motion, AnimatePresence } from "framer-motion";
-import { Play, Pause, Volume2, VolumeX, Clock, Waves, SkipForward } from 'lucide-react';
+import { Play, Pause, Volume2, VolumeX, Clock, Waves, SkipForward, Music } from 'lucide-react';
 import { toast } from "@/components/ui/use-toast";
 import useSounds from '../hooks/useSounds';
 
@@ -37,6 +37,7 @@ const MindfulnessSession: React.FC<MindfulnessSessionProps> = ({
   const [isMuted, setIsMuted] = useState(false);
   const [soundType, setSoundType] = useState<'meditation' | 'ambient' | 'nature'>('meditation');
   const [showControls, setShowControls] = useState(true);
+  const [showGuide, setShowGuide] = useState(false);
   
   const { play, pause, stop, isLoaded } = useSounds();
 
@@ -64,9 +65,31 @@ const MindfulnessSession: React.FC<MindfulnessSessionProps> = ({
     }
     
     return () => {
-      stop(soundType);
+      pause(soundType);
     };
   }, [isPaused, soundType, volume, isMuted]);
+
+  // Play chimes sound at specific intervals
+  useEffect(() => {
+    let intervalChimes: NodeJS.Timeout | null = null;
+    
+    if (!isPaused && isLoaded.chimes) {
+      // Play chimes every 5 minutes
+      const chimeInterval = 5 * 60; // 5 minutes in seconds
+      
+      intervalChimes = setInterval(() => {
+        // Only play if not at the very beginning or end
+        if (timeLeft > 10 && timeLeft < (duration * 60 - 10)) {
+          const actualVolume = isMuted ? 0 : (volume / 100) * 0.3; // Play chimes at lower volume
+          play('chimes', { volume: actualVolume });
+        }
+      }, chimeInterval * 1000);
+    }
+    
+    return () => {
+      if (intervalChimes) clearInterval(intervalChimes);
+    };
+  }, [isPaused, isLoaded.chimes]);
 
   const handlePlayPause = () => {
     if (isPaused) {
@@ -97,8 +120,13 @@ const MindfulnessSession: React.FC<MindfulnessSessionProps> = ({
     
     // Update playing sound volume if session is active
     if (!isPaused && isLoaded[soundType]) {
+      const actualVolume = newVolume / 100;
+      
+      // Temporarily pause and restart with new volume
       pause(soundType);
-      play(soundType, { volume: newVolume / 100, loop: true });
+      setTimeout(() => {
+        play(soundType, { volume: actualVolume, loop: true });
+      }, 50);
     }
   };
 
@@ -138,13 +166,32 @@ const MindfulnessSession: React.FC<MindfulnessSessionProps> = ({
     onCancel();
   };
 
+  const handleSoundTypeChange = (newType: 'meditation' | 'ambient' | 'nature') => {
+    if (newType !== soundType) {
+      // Stop current sound
+      if (!isPaused) {
+        stop(soundType);
+      }
+      
+      setSoundType(newType);
+      
+      // Start new sound if session is active
+      if (!isPaused && isLoaded[newType]) {
+        play(newType, { volume: isMuted ? 0 : volume / 100, loop: true });
+      }
+    }
+  };
+
   const progress = ((duration * 60 - timeLeft) / (duration * 60)) * 100;
 
   return (
     <Card className="w-full max-w-md mx-auto">
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
-          <div>{sessionType} Session</div>
+          <div className="flex items-center">
+            <Music className="mr-2 h-5 w-5 text-purple-600" />
+            {sessionType} Session
+          </div>
           <div className="text-sm font-normal bg-purple-100 text-purple-800 px-2 py-1 rounded-full flex items-center">
             <Clock className="h-3 w-3 mr-1" /> {duration} min
           </div>
@@ -223,7 +270,7 @@ const MindfulnessSession: React.FC<MindfulnessSessionProps> = ({
                   <Label>Sound Type</Label>
                   <Select 
                     value={soundType}
-                    onValueChange={(value: any) => setSoundType(value)}
+                    onValueChange={(value: any) => handleSoundTypeChange(value)}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select sound type" />
@@ -265,6 +312,15 @@ const MindfulnessSession: React.FC<MindfulnessSessionProps> = ({
                   />
                   <Label htmlFor="auto-bell">Play bell at start and end</Label>
                 </div>
+
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="show-guide"
+                    checked={showGuide}
+                    onCheckedChange={setShowGuide}
+                  />
+                  <Label htmlFor="show-guide">Show meditation guide</Label>
+                </div>
               </div>
             </motion.div>
           )}
@@ -280,10 +336,48 @@ const MindfulnessSession: React.FC<MindfulnessSessionProps> = ({
           </Button>
         )}
         
-        <div className="text-center text-sm text-gray-500">
-          <p>Find a comfortable position and focus on your breath.</p>
-          <p>Allow thoughts to pass without judgment.</p>
-        </div>
+        <AnimatePresence>
+          {showGuide && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3 }}
+              className="bg-gray-50 p-4 rounded-lg"
+            >
+              <h3 className="font-semibold mb-2">Meditation Guide</h3>
+              <ul className="space-y-2 text-sm text-gray-700">
+                <li className="flex items-start">
+                  <span className="text-purple-600 mr-2">1.</span>
+                  Find a comfortable position, seated or lying down.
+                </li>
+                <li className="flex items-start">
+                  <span className="text-purple-600 mr-2">2.</span>
+                  Close your eyes and take a deep breath in through your nose.
+                </li>
+                <li className="flex items-start">
+                  <span className="text-purple-600 mr-2">3.</span>
+                  Exhale slowly through your mouth, releasing all tension.
+                </li>
+                <li className="flex items-start">
+                  <span className="text-purple-600 mr-2">4.</span>
+                  Focus on your breath, noticing each inhale and exhale.
+                </li>
+                <li className="flex items-start">
+                  <span className="text-purple-600 mr-2">5.</span>
+                  When your mind wanders, gently bring your focus back to your breath.
+                </li>
+              </ul>
+            </motion.div>
+          )}
+        </AnimatePresence>
+        
+        {!showGuide && !showControls && (
+          <div className="text-center text-sm text-gray-500">
+            <p>Find a comfortable position and focus on your breath.</p>
+            <p>Allow thoughts to pass without judgment.</p>
+          </div>
+        )}
       </CardContent>
 
       <CardFooter className="flex justify-between">

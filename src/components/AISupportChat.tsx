@@ -124,7 +124,7 @@ const AISupportChat: React.FC = () => {
 
   const handleAddWorkout = async (workoutPlan: any) => {
     try {
-      if (!session?.user) {
+      if (!user) {
         toast({
           title: "Sign in required",
           description: "Please sign in to save workout plans",

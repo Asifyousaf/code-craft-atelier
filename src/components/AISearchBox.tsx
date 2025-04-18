@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, X, Loader2, Dumbbell, CalendarCheck, CircleCheck } from 'lucide-react';
+import { Search, X, Loader2, Dumbbell, CalendarCheck, CircleCheck, CornerDownLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from "@/components/ui/use-toast";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -25,12 +25,19 @@ const AISearchBox: React.FC = () => {
   const [workoutPlan, setWorkoutPlan] = useState<WorkoutPlan | null>(null);
   const [showWorkoutModal, setShowWorkoutModal] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const { toast } = useToast();
   const searchRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Load recent searches from localStorage
+    const savedSearches = localStorage.getItem('recentSearches');
+    if (savedSearches) {
+      setRecentSearches(JSON.parse(savedSearches).slice(0, 3));
+    }
+
     const handleClickOutside = (event: MouseEvent) => {
       if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
         setIsExpanded(false);
@@ -46,11 +53,23 @@ const AISearchBox: React.FC = () => {
   const handleFocus = () => {
     setIsExpanded(true);
   };
+  
+  // Handle Enter keypress
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && query.trim()) {
+      handleSearch(e);
+    }
+  };
 
-  const handleSearch = async (e: React.FormEvent) => {
+  const handleSearch = async (e: React.FormEvent | React.KeyboardEvent) => {
     e.preventDefault();
     
     if (!query.trim()) return;
+    
+    // Save to recent searches
+    const newRecentSearches = [query, ...recentSearches.filter(s => s !== query)].slice(0, 3);
+    setRecentSearches(newRecentSearches);
+    localStorage.setItem('recentSearches', JSON.stringify(newRecentSearches));
     
     setIsSearching(true);
     setWorkoutPlan(null);
@@ -75,6 +94,46 @@ const AISearchBox: React.FC = () => {
           setWorkoutPlan(generatedWorkout);
           setSearchResults("I've created a personalized workout plan based on your request. This full-body strength training routine can be done 3 times per week with rest days in between. Each session takes about 45 minutes to complete and targets all major muscle groups for balanced development. Would you like to save this workout to your profile?");
         } 
+        // For body type specific queries
+        else if (query.toLowerCase().includes('skinny') || 
+                query.toLowerCase().includes('thin') || 
+                query.toLowerCase().includes('gain weight')) {
+          
+          const bulkWorkout = {
+            id: Math.random().toString(36).substring(7),
+            name: "Muscle Building Program",
+            description: "A focused workout plan designed to help you build muscle mass through progressive overload and proper nutrition guidance.",
+            duration: "60 minutes",
+            level: "Intermediate",
+            type: "Hypertrophy"
+          };
+          
+          setWorkoutPlan(bulkWorkout);
+          setSearchResults("Based on your goal to gain muscle mass, I've created a hypertrophy-focused workout plan. This program emphasizes compound movements like squats, deadlifts, bench press, and rows that target multiple muscle groups for optimal growth. Combine this with a caloric surplus of 300-500 calories above maintenance and adequate protein intake (1.6-2g per kg of bodyweight). Would you like to save this workout plan?");
+        }
+        // For back pain related queries
+        else if (query.toLowerCase().includes('back pain') || 
+                query.toLowerCase().includes('back issues')) {
+          
+          const backFriendlyWorkout = {
+            id: Math.random().toString(36).substring(7),
+            name: "Back-Friendly Strength Routine",
+            description: "A carefully designed workout program that strengthens your core and improves posture without straining your back.",
+            duration: "30 minutes",
+            level: "Beginner",
+            type: "Therapeutic"
+          };
+          
+          setWorkoutPlan(backFriendlyWorkout);
+          setSearchResults("I understand back pain can be challenging. I've created a gentle workout routine that focuses on core strengthening and proper posture without putting strain on your back. This plan includes modified exercises that avoid spinal loading while still providing an effective workout. Remember to consult with a healthcare professional before starting any new exercise program if you have back problems. Would you like to save this back-friendly workout plan?");
+        }
+        // For watch/device related queries
+        else if (query.toLowerCase().includes('watch') || 
+                query.toLowerCase().includes('tracker') || 
+                query.toLowerCase().includes('device')) {
+          
+          setSearchResults("For fitness tracking, I recommend checking out our store section where we have a curated selection of fitness watches and trackers. Popular options include the Garmin Forerunner series for serious runners, Fitbit Charge for everyday tracking, and Apple Watch for those in the Apple ecosystem. Each offers different features like heart rate monitoring, sleep tracking, and workout detection. Would you like me to direct you to our store section?");
+        }
         // For nutrition related queries
         else if (query.toLowerCase().includes('food') || 
                 query.toLowerCase().includes('diet') ||
@@ -97,7 +156,7 @@ const AISearchBox: React.FC = () => {
         }
         
         setIsSearching(false);
-      }, 2000);
+      }, 1500);
     } catch (error) {
       toast({
         title: "Error",
@@ -136,6 +195,14 @@ const AISearchBox: React.FC = () => {
       setIsSaving(false);
     }
   };
+  
+  const selectRecentSearch = (search: string) => {
+    setQuery(search);
+    // Focus the input field
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  };
 
   return (
     <>
@@ -145,101 +212,129 @@ const AISearchBox: React.FC = () => {
           isExpanded ? 'w-full' : 'w-full sm:w-3/4'
         }`}
       >
-        <form onSubmit={handleSearch}>
-          <div className="relative">
-            <div className="absolute left-3 top-3 text-gray-400">
-              <Search className="h-5 w-5" />
-            </div>
-            <input
-              ref={inputRef}
-              type="text"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              onFocus={handleFocus}
-              placeholder="Ask about workouts, nutrition, or wellness..."
-              className={`w-full pl-10 pr-12 py-3 border bg-white border-gray-300 rounded-full shadow-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all ${
-                isExpanded ? 'rounded-b-none shadow-xl' : ''
-              }`}
-              disabled={isSearching}
-            />
-            <AnimatePresence>
-              {query && (
-                <motion.button
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  type="button"
-                  onClick={() => setQuery('')}
-                  className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
-                >
-                  <X className="h-5 w-5" />
-                </motion.button>
-              )}
-            </AnimatePresence>
+        <div className="relative">
+          <div className="absolute left-3 top-3 text-gray-400">
+            <Search className="h-5 w-5" />
           </div>
-        </form>
+          <input
+            ref={inputRef}
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onFocus={handleFocus}
+            onKeyDown={handleKeyDown}
+            placeholder="Ask about workouts, nutrition, or wellness..."
+            className={`w-full pl-10 pr-12 py-3 border bg-white border-gray-300 rounded-full shadow-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all ${
+              isExpanded ? 'rounded-b-none shadow-xl' : ''
+            }`}
+            disabled={isSearching}
+          />
+          <div className="absolute right-3 top-3 flex items-center gap-1">
+            {query && (
+              <motion.button
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                type="button"
+                onClick={() => setQuery('')}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="h-5 w-5" />
+              </motion.button>
+            )}
+            <button 
+              onClick={(e) => query && handleSearch(e)}
+              className="text-gray-400 hover:text-purple-600 ml-1"
+              disabled={isSearching || !query}
+            >
+              <CornerDownLeft className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
         
         <AnimatePresence>
-          {isExpanded && (isSearching || searchResults) && (
+          {isExpanded && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
               className="absolute w-full bg-white border border-t-0 border-gray-300 rounded-b-lg shadow-xl overflow-hidden"
             >
-              <div className="max-h-96 overflow-y-auto p-4">
-                {isSearching ? (
-                  <div className="flex flex-col items-center justify-center py-8">
-                    <Loader2 className="h-8 w-8 text-purple-600 animate-spin mb-3" />
-                    <p className="text-gray-600">Searching for the best answer...</p>
+              {/* Recent searches */}
+              {recentSearches.length > 0 && !isSearching && !searchResults && (
+                <div className="p-3 border-b border-gray-100">
+                  <p className="text-xs font-medium text-gray-500 mb-2">Recent searches</p>
+                  <div className="space-y-1">
+                    {recentSearches.map((search, idx) => (
+                      <div 
+                        key={idx}
+                        className="flex items-center px-2 py-1.5 hover:bg-gray-50 rounded-md cursor-pointer"
+                        onClick={() => selectRecentSearch(search)}
+                      >
+                        <Search className="h-3.5 w-3.5 text-gray-400 mr-2" />
+                        <span className="text-sm text-gray-700">{search}</span>
+                      </div>
+                    ))}
                   </div>
-                ) : searchResults ? (
-                  <div className="space-y-4">
-                    <div className="text-gray-700 leading-relaxed">{searchResults}</div>
-                    
-                    {workoutPlan && (
-                      <div className="mt-4">
-                        <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
-                          <div className="flex items-start">
-                            <div className="bg-purple-100 rounded-full p-2 mr-3">
-                              <Dumbbell className="h-5 w-5 text-purple-600" />
-                            </div>
-                            <div>
-                              <h3 className="font-semibold text-gray-800">{workoutPlan.name}</h3>
-                              <p className="text-sm text-gray-600 mt-1">
-                                {workoutPlan.description}
-                              </p>
-                              
-                              <div className="flex flex-wrap gap-2 mt-3">
-                                <div className="flex items-center bg-white px-2 py-1 rounded text-xs text-gray-600 border border-gray-200">
-                                  <CalendarCheck className="h-3 w-3 mr-1" />
-                                  {workoutPlan.duration}
-                                </div>
-                                <div className="flex items-center bg-white px-2 py-1 rounded text-xs text-gray-600 border border-gray-200">
-                                  Level: {workoutPlan.level}
-                                </div>
-                                <div className="flex items-center bg-white px-2 py-1 rounded text-xs text-gray-600 border border-gray-200">
-                                  Type: {workoutPlan.type}
-                                </div>
+                </div>
+              )}
+              
+              {/* Search results or loading state */}
+              {(isSearching || searchResults) && (
+                <div className="max-h-96 overflow-y-auto p-4">
+                  {isSearching ? (
+                    <div className="flex flex-col items-center justify-center py-8">
+                      <Loader2 className="h-8 w-8 text-purple-600 animate-spin mb-3" />
+                      <p className="text-gray-600">Searching for the best answer...</p>
+                    </div>
+                  ) : searchResults ? (
+                    <div className="space-y-4">
+                      <div className="text-gray-700 leading-relaxed">{searchResults}</div>
+                      
+                      {workoutPlan && (
+                        <div className="mt-4">
+                          <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
+                            <div className="flex items-start">
+                              <div className="bg-purple-100 rounded-full p-2 mr-3">
+                                <Dumbbell className="h-5 w-5 text-purple-600" />
                               </div>
-                              
-                              <div className="mt-4">
-                                <Button 
-                                  className="bg-purple-600 hover:bg-purple-700 text-sm"
-                                  onClick={() => setShowWorkoutModal(true)}
-                                >
-                                  <CircleCheck className="mr-1 h-4 w-4" />
-                                  Save this workout
-                                </Button>
+                              <div>
+                                <h3 className="font-semibold text-gray-800">{workoutPlan.name}</h3>
+                                <p className="text-sm text-gray-600 mt-1">
+                                  {workoutPlan.description}
+                                </p>
+                                
+                                <div className="flex flex-wrap gap-2 mt-3">
+                                  <div className="flex items-center bg-white px-2 py-1 rounded text-xs text-gray-600 border border-gray-200">
+                                    <CalendarCheck className="h-3 w-3 mr-1" />
+                                    {workoutPlan.duration}
+                                  </div>
+                                  <div className="flex items-center bg-white px-2 py-1 rounded text-xs text-gray-600 border border-gray-200">
+                                    Level: {workoutPlan.level}
+                                  </div>
+                                  <div className="flex items-center bg-white px-2 py-1 rounded text-xs text-gray-600 border border-gray-200">
+                                    Type: {workoutPlan.type}
+                                  </div>
+                                </div>
+                                
+                                <div className="mt-4">
+                                  <Button 
+                                    className="bg-purple-600 hover:bg-purple-700 text-sm"
+                                    onClick={() => setShowWorkoutModal(true)}
+                                  >
+                                    <CircleCheck className="mr-1 h-4 w-4" />
+                                    Save this workout
+                                  </Button>
+                                </div>
                               </div>
                             </div>
                           </div>
                         </div>
-                      </div>
-                    )}
-                  </div>
-                ) : null}
-              </div>
+                      )}
+                    </div>
+                  ) : null}
+                </div>
+              )}
             </motion.div>
           )}
         </AnimatePresence>
