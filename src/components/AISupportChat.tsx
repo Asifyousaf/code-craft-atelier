@@ -1,17 +1,19 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageSquare, X, Send, Loader2, PlusCircle } from 'lucide-react';
+import { MessageSquare, X, Send, Loader2, PlusCircle, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from "@/components/ui/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 
 interface Message {
   id: string;
   content: string;
   sender: 'user' | 'ai';
   timestamp: Date;
+  workoutPlan?: any; // For workout recommendations
 }
 
 const AISupportChat: React.FC = () => {
@@ -70,26 +72,45 @@ const AISupportChat: React.FC = () => {
     setIsLoading(true);
 
     try {
-      // Simulate AI response (in a real app, this would call your AI endpoint)
-      setTimeout(() => {
-        const responses = [
-          "That's a great question about wellness! Regular exercise, balanced nutrition, and mindfulness practices form the foundation of good health.",
-          "I recommend starting with 20-30 minutes of moderate exercise at least 3 times per week. Our workouts section has great beginner-friendly options!",
-          "For nutrition, focus on whole foods, plenty of vegetables, lean proteins, and staying hydrated. Check out our meal plans for more guidance.",
-          "Mindfulness meditation can help reduce stress and improve focus. Even 5 minutes a day can make a difference. Have you tried our guided sessions?",
-          "Remember that consistency is key in any wellness journey. Small, sustainable changes often lead to the best long-term results."
-        ];
+      // Here we would typically call our AI endpoint
+      // For now, using conditional responses based on keywords
+      const userQuery = message.toLowerCase();
+      let aiResponse = '';
+      let workoutPlan = null;
 
+      if (userQuery.includes('skinny') || userQuery.includes('lose weight')) {
+        aiResponse = "Based on your goal to get lean, here's a recommended workout plan that focuses on cardio and high-intensity training. Would you like me to add this to your workout routines?";
+        workoutPlan = {
+          title: "Weight Loss Focused Workout",
+          type: "CARDIO_STRENGTH",
+          description: "A balanced plan combining cardio and strength training for optimal fat loss",
+          level: "beginner",
+          exercises: [
+            {
+              name: "HIIT Cardio Circuit",
+              duration: 20,
+              instructions: ["30 seconds high intensity", "30 seconds rest", "Repeat 10 times"]
+            }
+          ]
+        };
+      } else if (userQuery.includes('back pain') || userQuery.includes('back')) {
+        aiResponse = "I understand you're looking for exercises that won't strain your back. Here's a low-impact workout plan focusing on core strength and gentle movements. Always consult your doctor before starting any new exercise routine.";
+      } else if (userQuery.includes('watch') || userQuery.includes('device')) {
+        aiResponse = "For fitness tracking, I recommend checking out our store section where we have a curated selection of fitness watches. Would you like me to show you our top recommendations?";
+      }
+
+      setTimeout(() => {
         const aiMessage: Message = {
           id: (Date.now() + 1).toString(),
-          content: responses[Math.floor(Math.random() * responses.length)],
+          content: aiResponse || "I'm here to help with any fitness, nutrition, or wellness questions you have. Feel free to ask about specific workout plans, nutrition advice, or general wellness tips!",
           sender: 'ai',
-          timestamp: new Date()
+          timestamp: new Date(),
+          workoutPlan: workoutPlan
         };
 
         setConversation(prev => [...prev, aiMessage]);
         setIsLoading(false);
-      }, 1500);
+      }, 1000);
       
     } catch (error) {
       toast({
@@ -101,16 +122,30 @@ const AISupportChat: React.FC = () => {
     }
   };
 
-  const handleSuggestedQuestion = (question: string) => {
-    setMessage(question);
-  };
+  const handleAddWorkout = async (workoutPlan: any) => {
+    try {
+      if (!session?.user) {
+        toast({
+          title: "Sign in required",
+          description: "Please sign in to save workout plans",
+          variant: "default",
+        });
+        return;
+      }
 
-  const suggestedQuestions = [
-    "How can I improve my workout routine?",
-    "What are some healthy meal prep ideas?",
-    "How do I track my fitness progress?",
-    "Can you suggest mindfulness exercises?"
-  ];
+      // Here we would typically save the workout to the user's profile
+      toast({
+        title: "Workout Added",
+        description: "The workout plan has been added to your routines",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to add workout plan",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <>
@@ -138,9 +173,28 @@ const AISupportChat: React.FC = () => {
                   <AvatarImage src="https://img.freepik.com/free-vector/cute-robot-cartoon-character_138676-2745.jpg?size=338&ext=jpg&uid=R106622016&ga=GA1.1.678848138.1713037223" />
                   <AvatarFallback className="bg-purple-200 text-purple-800">AI</AvatarFallback>
                 </Avatar>
-                <div>
+                <div className="flex items-center">
                   <h3 className="font-medium">WellnessAI Assistant</h3>
-                  <p className="text-xs text-purple-200">Online</p>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="ghost" size="sm" className="ml-2 text-white hover:bg-purple-700">
+                        <Info className="h-4 w-4" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-80">
+                      <div className="space-y-2">
+                        <h4 className="font-medium">How can I help you?</h4>
+                        <p className="text-sm text-gray-500">Ask me about:</p>
+                        <ul className="text-sm text-gray-500 list-disc list-inside">
+                          <li>Personalized workout plans</li>
+                          <li>Nutrition advice</li>
+                          <li>Fitness equipment recommendations</li>
+                          <li>Exercise modifications</li>
+                          <li>Wellness tips</li>
+                        </ul>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
                 </div>
               </div>
               <Button 
@@ -154,7 +208,7 @@ const AISupportChat: React.FC = () => {
             </div>
             
             {/* Chat Messages */}
-            <div className="flex-1 p-4 overflow-y-auto">
+            <div className="flex-1 p-4 overflow-y-auto bg-gray-50">
               <div className="space-y-4">
                 {conversation.map((msg) => (
                   <div
@@ -165,11 +219,25 @@ const AISupportChat: React.FC = () => {
                       className={`max-w-[80%] rounded-lg px-4 py-2 ${
                         msg.sender === 'user' 
                           ? 'bg-purple-600 text-white rounded-br-none' 
-                          : 'bg-gray-100 text-gray-800 rounded-bl-none'
+                          : 'bg-white text-gray-800 rounded-bl-none shadow-sm'
                       }`}
                     >
-                      <p>{msg.content}</p>
-                      <p className={`text-xs mt-1 ${msg.sender === 'user' ? 'text-purple-200' : 'text-gray-500'}`}>
+                      <p className="text-sm">{msg.content}</p>
+                      {msg.workoutPlan && (
+                        <div className="mt-2 p-2 bg-purple-50 rounded-md">
+                          <p className="text-xs font-medium text-purple-700">{msg.workoutPlan.title}</p>
+                          <p className="text-xs text-purple-600 mt-1">{msg.workoutPlan.description}</p>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="mt-2 text-xs w-full"
+                            onClick={() => handleAddWorkout(msg.workoutPlan)}
+                          >
+                            Add to My Workouts
+                          </Button>
+                        </div>
+                      )}
+                      <p className={`text-xs mt-1 ${msg.sender === 'user' ? 'text-purple-200' : 'text-gray-400'}`}>
                         {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </p>
                     </div>
@@ -177,7 +245,7 @@ const AISupportChat: React.FC = () => {
                 ))}
                 {isLoading && (
                   <div className="flex justify-start">
-                    <div className="bg-gray-100 text-gray-800 rounded-lg rounded-bl-none max-w-[80%] px-4 py-2">
+                    <div className="bg-white text-gray-800 rounded-lg rounded-bl-none max-w-[80%] px-4 py-2 shadow-sm">
                       <div className="flex items-center">
                         <Loader2 className="h-4 w-4 animate-spin text-purple-600 mr-2" />
                         <span className="text-sm">WellnessAI is thinking...</span>
@@ -191,16 +259,22 @@ const AISupportChat: React.FC = () => {
             
             {/* Suggested Questions */}
             {conversation.length < 3 && (
-              <div className="px-4 py-2 border-t border-gray-100">
-                <p className="text-xs text-gray-500 mb-2">Suggested questions:</p>
+              <div className="px-4 py-2 border-t border-gray-100 bg-white">
+                <p className="text-xs text-gray-500 mb-2">Try asking:</p>
                 <div className="flex flex-wrap gap-2">
-                  {suggestedQuestions.map((question, index) => (
+                  {[
+                    "I want to get in shape, where should I start?",
+                    "Can you suggest exercises for back pain?",
+                    "What's a good beginner workout routine?",
+                    "How can I improve my nutrition?",
+                    "Recommend a fitness tracker"
+                  ].map((question, index) => (
                     <Button
                       key={index}
                       variant="outline"
                       size="sm"
                       className="text-xs py-1 px-2 h-auto border-purple-200 text-purple-700 hover:bg-purple-50"
-                      onClick={() => handleSuggestedQuestion(question)}
+                      onClick={() => setMessage(question)}
                     >
                       {question}
                     </Button>
@@ -210,14 +284,14 @@ const AISupportChat: React.FC = () => {
             )}
             
             {/* Chat Input */}
-            <form onSubmit={handleSendMessage} className="border-t border-gray-100 p-4">
+            <form onSubmit={handleSendMessage} className="border-t border-gray-100 p-4 bg-white">
               <div className="flex items-center gap-2">
                 <div className="relative flex-1">
                   <input
                     type="text"
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
-                    placeholder="Type your message..."
+                    placeholder="Ask anything about fitness & wellness..."
                     className="w-full px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500 pr-10"
                     disabled={isLoading}
                   />
