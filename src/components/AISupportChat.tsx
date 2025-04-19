@@ -1,15 +1,18 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageSquare, X, Send, Loader2, PlusCircle, Info, Volume2, VolumeX, Save } from 'lucide-react';
+import { MessageSquare, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { supabase } from '@/integrations/supabase/client';
-import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
-import useSounds, { SoundType } from '@/hooks/useSounds';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Slider } from '@/components/ui/slider';
+import useSounds, { SoundType } from '@/hooks/useSounds';
+
+// Import refactored components
+import ChatHeader from './chat/ChatHeader';
+import ChatMessage from './chat/ChatMessage';
+import ChatInput from './chat/ChatInput';
+import ChatSuggestions from './chat/ChatSuggestions';
 
 interface Message {
   id: string;
@@ -22,8 +25,13 @@ interface Message {
   dataSource?: 'exercise' | 'recipe' | null;
 }
 
-const AISupportChat: React.FC = () => {
-  const [isOpen, setIsOpen] = useState(false);
+interface AISupportChatProps {
+  visible?: boolean;
+  onClose?: () => void;
+}
+
+const AISupportChat: React.FC<AISupportChatProps> = ({ visible = false, onClose }) => {
+  const [isOpen, setIsOpen] = useState(visible);
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [conversation, setConversation] = useState<Message[]>([
@@ -43,6 +51,11 @@ const AISupportChat: React.FC = () => {
   
   const { play, isLoaded } = useSounds();
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Update isOpen when visible prop changes
+  useEffect(() => {
+    setIsOpen(visible);
+  }, [visible]);
   
   // Get user session
   useEffect(() => {
@@ -80,10 +93,36 @@ const AISupportChat: React.FC = () => {
   };
 
   const toggleChat = () => {
-    setIsOpen(!isOpen);
+    const newIsOpen = !isOpen;
+    setIsOpen(newIsOpen);
+    
     // Play notification sound when opening chat
-    if (!isOpen && isLoaded.notification && isSoundEnabled) {
+    if (newIsOpen && isLoaded.notification && isSoundEnabled) {
       play('notification', { volume: volume / 100 });
+    }
+    
+    // Call onClose when closing chat if provided
+    if (!newIsOpen && onClose) {
+      onClose();
+    }
+  };
+
+  const toggleSound = () => {
+    setIsSoundEnabled(!isSoundEnabled);
+  };
+
+  // Handle incoming message from search box
+  const handleIncomingMessage = (query: string) => {
+    if (query.trim()) {
+      const userMessage: Message = {
+        id: Date.now().toString(),
+        content: query,
+        sender: 'user',
+        timestamp: new Date()
+      };
+      setConversation(prev => [...prev, userMessage]);
+      setIsOpen(true);
+      handleAIResponse(query);
     }
   };
 
@@ -107,16 +146,21 @@ const AISupportChat: React.FC = () => {
 
     setConversation([...conversation, userMessage]);
     setMessage('');
-    setIsLoading(true);
     
     // Play sound when sending message
     playSoundEffect('beep');
+    
+    handleAIResponse(message);
+  };
+
+  const handleAIResponse = async (userMessage: string) => {
+    setIsLoading(true);
 
     try {
       // Call our Edge Function
       const { data, error } = await supabase.functions.invoke('wellness-chatbot', {
         body: { 
-          message: message,
+          message: userMessage,
           history: conversation,
           userProfile: userProfile
         }
@@ -233,73 +277,23 @@ const AISupportChat: React.FC = () => {
     setVolume(newVolume[0]);
   };
 
-  const renderExerciseData = (data: any[]) => {
-    if (!data || data.length === 0) return null;
-    
-    return (
-      <div className="mt-3 bg-purple-50 p-3 rounded-md">
-        <h4 className="text-xs font-semibold text-purple-800 mb-2">Suggested Exercises:</h4>
-        <div className="space-y-2 max-h-60 overflow-auto">
-          {data.slice(0, 3).map((exercise, idx) => (
-            <div key={idx} className="bg-white p-2 rounded shadow-sm">
-              <div className="flex space-x-2">
-                {exercise.gifUrl && (
-                  <div className="w-16 h-16 flex-shrink-0">
-                    <img 
-                      src={exercise.gifUrl} 
-                      alt={exercise.name}
-                      className="w-full h-full object-cover rounded" 
-                    />
-                  </div>
-                )}
-                <div className="flex-1">
-                  <p className="text-xs font-medium">{exercise.name}</p>
-                  <p className="text-xs text-gray-500">Target: {exercise.target}</p>
-                  <p className="text-xs text-gray-500">Equipment: {exercise.equipment}</p>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
+  const handleSelectSuggestion = (suggestion: string) => {
+    setMessage(suggestion);
   };
 
-  const renderRecipeData = (data: any[]) => {
-    if (!data || data.length === 0) return null;
-    
-    return (
-      <div className="mt-3 bg-green-50 p-3 rounded-md">
-        <h4 className="text-xs font-semibold text-green-800 mb-2">Recommended Recipes:</h4>
-        <div className="space-y-2 max-h-60 overflow-auto">
-          {data.slice(0, 3).map((recipe, idx) => (
-            <div key={idx} className="bg-white p-2 rounded shadow-sm">
-              <div className="flex space-x-2">
-                {recipe.image && (
-                  <div className="w-16 h-16 flex-shrink-0">
-                    <img 
-                      src={recipe.image} 
-                      alt={recipe.title}
-                      className="w-full h-full object-cover rounded" 
-                    />
-                  </div>
-                )}
-                <div className="flex-1">
-                  <p className="text-xs font-medium">{recipe.title}</p>
-                  {recipe.nutrition && (
-                    <p className="text-xs text-gray-500">Calories: {recipe.nutrition.calories}</p>
-                  )}
-                  {recipe.diets && recipe.diets.length > 0 && (
-                    <p className="text-xs text-gray-500">Diet: {recipe.diets.join(', ')}</p>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  };
+  // Expose the handleIncomingMessage method
+  React.useEffect(() => {
+    if (window) {
+      (window as any).aiSupportChatRef = {
+        handleIncomingMessage
+      };
+    }
+    return () => {
+      if (window) {
+        delete (window as any).aiSupportChatRef;
+      }
+    };
+  }, [conversation]);
 
   return (
     <>
@@ -321,59 +315,11 @@ const AISupportChat: React.FC = () => {
             className="fixed bottom-20 right-6 bg-white rounded-xl shadow-2xl w-[90vw] sm:w-[400px] max-h-[600px] flex flex-col z-50 overflow-hidden"
           >
             {/* Chat Header */}
-            <div className="flex items-center justify-between bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-4 rounded-t-xl">
-              <div className="flex items-center">
-                <Avatar className="h-8 w-8 mr-2 bg-white">
-                  <AvatarImage src="https://img.freepik.com/free-vector/cute-robot-cartoon-character_138676-2745.jpg?size=338&ext=jpg&uid=R106622016&ga=GA1.1.678848138.1713037223" />
-                  <AvatarFallback className="bg-purple-200 text-purple-800">AI</AvatarFallback>
-                </Avatar>
-                <div className="flex items-center">
-                  <h3 className="font-medium">WellnessAI Assistant</h3>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button variant="ghost" size="sm" className="ml-2 text-white hover:bg-purple-700">
-                        <Info className="h-4 w-4" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-80">
-                      <div className="space-y-2">
-                        <h4 className="font-medium">How can I help you?</h4>
-                        <p className="text-sm text-gray-500">Ask me about:</p>
-                        <ul className="text-sm text-gray-500 list-disc list-inside">
-                          <li>Personalized workout plans</li>
-                          <li>Nutrition advice and recipes</li>
-                          <li>Fitness equipment recommendations</li>
-                          <li>Exercise modifications</li>
-                          <li>Wellness tips</li>
-                        </ul>
-                        <div className="pt-2 border-t mt-2">
-                          <p className="text-xs text-gray-500">Powered by OpenAI GPT-4, ExerciseDB, and Spoonacular APIs</p>
-                        </div>
-                      </div>
-                    </PopoverContent>
-                  </Popover>
-                </div>
-              </div>
-              <div className="flex items-center">
-                <Button
-                  variant="ghost" 
-                  size="icon"
-                  onClick={() => setIsSoundEnabled(!isSoundEnabled)}
-                  className="text-white hover:bg-purple-700 mr-1"
-                  title={isSoundEnabled ? "Mute sounds" : "Enable sounds"}
-                >
-                  {isSoundEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  onClick={toggleChat} 
-                  className="text-white hover:bg-purple-700"
-                >
-                  <X className="h-5 w-5" />
-                </Button>
-              </div>
-            </div>
+            <ChatHeader 
+              toggleChat={toggleChat} 
+              isSoundEnabled={isSoundEnabled} 
+              toggleSound={toggleSound} 
+            />
             
             {/* Sound settings panel */}
             <AnimatePresence>
@@ -386,7 +332,6 @@ const AISupportChat: React.FC = () => {
                   className="bg-gray-50 border-b overflow-hidden"
                 >
                   <div className="p-3 flex items-center">
-                    <Volume2 className="h-4 w-4 text-gray-500 mr-2" />
                     <Slider
                       value={[volume]}
                       min={0}
@@ -405,74 +350,11 @@ const AISupportChat: React.FC = () => {
             <div className="flex-1 p-4 overflow-y-auto bg-gray-50">
               <div className="space-y-4">
                 {conversation.map((msg) => (
-                  <div
-                    key={msg.id}
-                    className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-                  >
-                    <div
-                      className={`max-w-[80%] rounded-lg px-4 py-2 ${
-                        msg.sender === 'user' 
-                          ? 'bg-purple-600 text-white rounded-br-none' 
-                          : 'bg-white text-gray-800 rounded-bl-none shadow-sm'
-                      }`}
-                    >
-                      <p className="text-sm">{msg.content}</p>
-                      
-                      {/* Workout Plan Recommendation */}
-                      {msg.workoutPlan && (
-                        <div className="mt-2 p-3 bg-purple-50 rounded-md">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <p className="text-xs font-medium text-purple-700">{msg.workoutPlan.title}</p>
-                              <p className="text-xs text-purple-600 mt-1">{msg.workoutPlan.description}</p>
-                            </div>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-7 w-7 rounded-full p-0 text-purple-700"
-                              onClick={() => handleAddWorkout(msg.workoutPlan)}
-                            >
-                              <Save className="h-4 w-4" />
-                            </Button>
-                          </div>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="mt-2 text-xs w-full bg-white"
-                            onClick={() => handleAddWorkout(msg.workoutPlan)}
-                          >
-                            Add to My Workouts
-                          </Button>
-                        </div>
-                      )}
-                      
-                      {/* Meal Plan Recommendation */}
-                      {msg.mealPlan && (
-                        <div className="mt-2 p-3 bg-green-50 rounded-md">
-                          <p className="text-xs font-medium text-green-700">{msg.mealPlan.title}</p>
-                          <p className="text-xs text-green-600 mt-1">{msg.mealPlan.description}</p>
-                          <div className="flex gap-2 mt-2">
-                            <span className="text-xs bg-green-100 text-green-800 py-0.5 px-2 rounded-full">
-                              {msg.mealPlan.diet}
-                            </span>
-                            <span className="text-xs bg-green-100 text-green-800 py-0.5 px-2 rounded-full">
-                              {msg.mealPlan.calories} calories
-                            </span>
-                          </div>
-                        </div>
-                      )}
-                      
-                      {/* Display Exercise Data */}
-                      {msg.dataSource === 'exercise' && renderExerciseData(msg.additionalData)}
-                      
-                      {/* Display Recipe Data */}
-                      {msg.dataSource === 'recipe' && renderRecipeData(msg.additionalData)}
-                      
-                      <p className={`text-xs mt-1 ${msg.sender === 'user' ? 'text-purple-200' : 'text-gray-400'}`}>
-                        {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </p>
-                    </div>
-                  </div>
+                  <ChatMessage 
+                    key={msg.id} 
+                    message={msg} 
+                    onAddWorkout={handleAddWorkout} 
+                  />
                 ))}
                 {isLoading && (
                   <div className="flex justify-start">
@@ -490,115 +372,17 @@ const AISupportChat: React.FC = () => {
             
             {/* Suggested Questions */}
             {conversation.length < 3 && (
-              <div className="px-4 py-3 border-t border-gray-100 bg-white">
-                <Tabs defaultValue="fitness" className="w-full">
-                  <TabsList className="w-full mb-2">
-                    <TabsTrigger value="fitness" className="text-xs flex-1">Fitness</TabsTrigger>
-                    <TabsTrigger value="nutrition" className="text-xs flex-1">Nutrition</TabsTrigger>
-                    <TabsTrigger value="wellness" className="text-xs flex-1">Wellness</TabsTrigger>
-                  </TabsList>
-                  
-                  <TabsContent value="fitness" className="mt-0">
-                    <div className="flex flex-wrap gap-2">
-                      {[
-                        "I want to get in shape, where should I start?",
-                        "Can you suggest exercises for back pain?",
-                        "I need a beginner workout routine",
-                        "What's a good home workout without equipment?",
-                        "Help me build muscle in my arms"
-                      ].map((question, index) => (
-                        <Button
-                          key={index}
-                          variant="outline"
-                          size="sm"
-                          className="text-xs py-1 px-2 h-auto border-purple-200 text-purple-700 hover:bg-purple-50"
-                          onClick={() => setMessage(question)}
-                        >
-                          {question}
-                        </Button>
-                      ))}
-                    </div>
-                  </TabsContent>
-                  
-                  <TabsContent value="nutrition" className="mt-0">
-                    <div className="flex flex-wrap gap-2">
-                      {[
-                        "I need a high protein meal idea",
-                        "What's a good vegan breakfast?",
-                        "Suggest a 500 calorie lunch",
-                        "What should I eat before a workout?",
-                        "Help me meal prep for the week"
-                      ].map((question, index) => (
-                        <Button
-                          key={index}
-                          variant="outline"
-                          size="sm"
-                          className="text-xs py-1 px-2 h-auto border-green-200 text-green-700 hover:bg-green-50"
-                          onClick={() => setMessage(question)}
-                        >
-                          {question}
-                        </Button>
-                      ))}
-                    </div>
-                  </TabsContent>
-                  
-                  <TabsContent value="wellness" className="mt-0">
-                    <div className="flex flex-wrap gap-2">
-                      {[
-                        "How can I improve my sleep?",
-                        "Give me a simple meditation technique",
-                        "I need help with workout motivation",
-                        "What fitness tracker do you recommend?",
-                        "How to reduce stress after work?"
-                      ].map((question, index) => (
-                        <Button
-                          key={index}
-                          variant="outline"
-                          size="sm"
-                          className="text-xs py-1 px-2 h-auto border-blue-200 text-blue-700 hover:bg-blue-50"
-                          onClick={() => setMessage(question)}
-                        >
-                          {question}
-                        </Button>
-                      ))}
-                    </div>
-                  </TabsContent>
-                </Tabs>
-              </div>
+              <ChatSuggestions onSelectSuggestion={handleSelectSuggestion} />
             )}
             
             {/* Chat Input */}
-            <form onSubmit={handleSendMessage} className="border-t border-gray-100 p-4 bg-white">
-              <div className="flex items-center gap-2">
-                <div className="relative flex-1">
-                  <input
-                    type="text"
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    placeholder="Ask anything about fitness & wellness..."
-                    className="w-full px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500 pr-10"
-                    disabled={isLoading}
-                    ref={inputRef}
-                  />
-                  {!message && (
-                    <PlusCircle className="absolute right-3 top-2.5 text-gray-400 h-5 w-5" />
-                  )}
-                </div>
-                <Button 
-                  type="submit" 
-                  disabled={!message.trim() || isLoading}
-                  className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 rounded-full p-2 h-10 w-10"
-                >
-                  <Send className="h-5 w-5" />
-                </Button>
-              </div>
-              
-              {!user && (
-                <p className="text-xs text-gray-500 mt-2 text-center">
-                  <a href="/auth" className="text-purple-600 hover:underline">Sign in</a> to save your conversation history
-                </p>
-              )}
-            </form>
+            <ChatInput 
+              message={message}
+              setMessage={setMessage}
+              onSubmit={handleSendMessage}
+              isLoading={isLoading}
+              userSignedIn={!!user}
+            />
           </motion.div>
         )}
       </AnimatePresence>

@@ -1,10 +1,10 @@
+
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Play, Utensils, Dumbbell, Activity, MessageSquare, Trophy, Users, Heart } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import Layout from '../components/Layout';
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import { toast } from "@/components/ui/use-toast";
 import AISearchBox from '../components/AISearchBox';
 import AISupportChat from '../components/AISupportChat';
@@ -109,9 +109,8 @@ const Index = () => {
     setChatVisible(true);
     
     // Find the chat component and pass the message
-    const chatComponent = document.querySelector('ai-support-chat');
-    if (chatComponent) {
-      (chatComponent as any).handleIncomingMessage?.(query);
+    if (window && (window as any).aiSupportChatRef) {
+      (window as any).aiSupportChatRef.handleIncomingMessage(query);
     }
   };
 

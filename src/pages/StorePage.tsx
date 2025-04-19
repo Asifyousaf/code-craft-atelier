@@ -1,252 +1,206 @@
 
-import { useState, useEffect } from 'react';
-import Layout from '@/components/Layout';
-import { 
-  Tabs, 
-  TabsContent, 
-  TabsList, 
-  TabsTrigger 
-} from "@/components/ui/tabs";
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardFooter, 
-  CardHeader, 
-  CardTitle 
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { ShoppingCart, Heart, Star } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
-
-// Mock product data - in a real app, this would come from an API
-const products = [
-  {
-    id: 1,
-    name: "Premium Yoga Mat",
-    description: "Eco-friendly non-slip yoga mat for optimal comfort and stability.",
-    price: 49.99,
-    rating: 4.8,
-    category: "equipment",
-    image: "https://images.unsplash.com/photo-1592432678016-e910b452f9a2?q=80&w=1470&auto=format&fit=crop"
-  },
-  {
-    id: 2,
-    name: "Resistance Bands Set",
-    description: "5-level resistance bands for strength training and rehabilitation.",
-    price: 29.99,
-    rating: 4.5,
-    category: "equipment",
-    image: "https://images.unsplash.com/photo-1598550480917-1c485268676e?q=80&w=1470&auto=format&fit=crop"
-  },
-  {
-    id: 3,
-    name: "Plant Protein Powder",
-    description: "Organic plant-based protein powder with 25g protein per serving.",
-    price: 39.99,
-    rating: 4.6,
-    category: "supplements",
-    image: "https://images.unsplash.com/photo-1607011116802-300b5b224bbd?q=80&w=1528&auto=format&fit=crop"
-  },
-  {
-    id: 4,
-    name: "Smart Water Bottle",
-    description: "Tracks your water intake and reminds you to stay hydrated.",
-    price: 35.99,
-    rating: 4.2,
-    category: "accessories",
-    image: "https://images.unsplash.com/photo-1553531889-e6cf4d692b1b?q=80&w=1364&auto=format&fit=crop"
-  },
-  {
-    id: 5,
-    name: "Meditation Cushion Set",
-    description: "Ergonomic meditation cushion and mat for daily practice.",
-    price: 59.99,
-    rating: 4.9,
-    category: "mindfulness",
-    image: "https://images.unsplash.com/photo-1545205597-3d9d02c29597?q=80&w=1470&auto=format&fit=crop"
-  },
-  {
-    id: 6,
-    name: "Fitness Tracker Watch",
-    description: "Advanced fitness tracking with heart rate, sleep analysis and workout modes.",
-    price: 89.99,
-    rating: 4.7,
-    category: "accessories",
-    image: "https://images.unsplash.com/photo-1575311373937-040b8e1fd5b6?q=80&w=1476&auto=format&fit=crop"
-  }
-];
-
-// Recommended products (would be personalized in a real app)
-const recommendedProducts = [
-  {
-    id: 7,
-    name: "Wireless Earbuds",
-    description: "Sweat-resistant wireless earbuds perfect for intense workouts.",
-    price: 79.99,
-    rating: 4.6,
-    category: "accessories",
-    image: "https://images.unsplash.com/photo-1590658268037-6bf12165a8df?q=80&w=1632&auto=format&fit=crop"
-  },
-  {
-    id: 8,
-    name: "Recovery Massage Gun",
-    description: "Professional-grade percussion massage device for faster recovery.",
-    price: 129.99,
-    rating: 4.9,
-    category: "recovery",
-    image: "https://images.unsplash.com/photo-1623880840102-7df0a9f3545b?q=80&w=1470&auto=format&fit=crop"
-  },
-  {
-    id: 9,
-    name: "Sleep Aid Supplement",
-    description: "Natural supplement to improve sleep quality and recovery.",
-    price: 24.99,
-    rating: 4.5,
-    category: "supplements",
-    image: "https://images.unsplash.com/photo-1626903257791-c8c4c97238bd?q=80&w=1364&auto=format&fit=crop"
-  }
-];
-
-type ProductCardProps = {
-  product: {
-    id: number;
-    name: string;
-    description: string;
-    price: number;
-    rating: number;
-    category: string;
-    image: string;
-  };
-};
-
-const ProductCard = ({ product }: ProductCardProps) => {
-  const { toast } = useToast();
-  
-  const handleAddToCart = () => {
-    toast({
-      title: "Added to Cart",
-      description: `${product.name} has been added to your cart.`,
-    });
-  };
-  
-  const handleSaveToWishlist = () => {
-    toast({
-      title: "Saved to Wishlist",
-      description: `${product.name} has been added to your wishlist.`,
-    });
-  };
-
-  return (
-    <Card className="h-full flex flex-col">
-      <div className="aspect-square overflow-hidden">
-        <img 
-          src={product.image} 
-          alt={product.name} 
-          className="object-cover w-full h-full transition-transform duration-300 hover:scale-105"
-        />
-      </div>
-      <CardHeader className="pb-2">
-        <div className="flex justify-between items-start">
-          <CardTitle className="text-lg">{product.name}</CardTitle>
-          <div className="flex items-center text-amber-500">
-            <Star className="h-4 w-4 fill-current" />
-            <span className="ml-1 text-sm">{product.rating}</span>
-          </div>
-        </div>
-        <CardDescription className="text-xs uppercase tracking-wide">
-          {product.category}
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="pb-2 flex-grow">
-        <p className="text-sm text-gray-600 line-clamp-2">{product.description}</p>
-      </CardContent>
-      <CardFooter className="pt-2 flex justify-between items-center">
-        <p className="font-bold">${product.price.toFixed(2)}</p>
-        <div className="flex gap-2">
-          <Button 
-            size="sm" 
-            variant="outline" 
-            onClick={handleSaveToWishlist}
-            className="h-9 w-9 p-0"
-          >
-            <Heart className="h-4 w-4" />
-            <span className="sr-only">Add to wishlist</span>
-          </Button>
-          <Button 
-            size="sm" 
-            onClick={handleAddToCart}
-            className="flex gap-1"
-          >
-            <ShoppingCart className="h-4 w-4" />
-            <span>Add</span>
-          </Button>
-        </div>
-      </CardFooter>
-    </Card>
-  );
-};
+import React from 'react';
+import Layout from '../components/Layout';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { ShoppingBag, Star, Heart, Share2, ExternalLink } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Separator } from '@/components/ui/separator';
 
 const StorePage = () => {
-  const [activeCategory, setActiveCategory] = useState("all");
-  const [filteredProducts, setFilteredProducts] = useState(products);
-
-  useEffect(() => {
-    if (activeCategory === "all") {
-      setFilteredProducts(products);
-    } else {
-      setFilteredProducts(products.filter(product => product.category === activeCategory));
+  const products = [
+    {
+      id: 1,
+      name: 'Premium Yoga Mat',
+      price: 49.99,
+      rating: 4.8,
+      image: 'https://images.unsplash.com/photo-1554284126-aa88f22d8b74?q=80&w=2294&q=80',
+      description: 'Extra thick, non-slip yoga mat perfect for all types of yoga.',
+      category: 'equipment',
+      amazonLink: 'https://www.amazon.com/s?k=yoga+mat'
+    },
+    {
+      id: 2,
+      name: 'Resistance Band Set',
+      price: 29.99,
+      rating: 4.7,
+      image: 'https://images.unsplash.com/photo-1598289431512-b97b0917affc?q=80&w=2274&q=80',
+      description: 'Set of 5 resistance bands for strength training and rehabilitation.',
+      category: 'equipment',
+      amazonLink: 'https://www.amazon.com/s?k=resistance+bands'
+    },
+    {
+      id: 3,
+      name: 'Plant-based Protein Powder',
+      price: 39.99,
+      rating: 4.5,
+      image: 'https://images.unsplash.com/photo-1579722821273-0f6c1b1d4b13?q=80&w=2340&q=80',
+      description: 'Organic plant-based protein with 25g protein per serving.',
+      category: 'nutrition',
+      amazonLink: 'https://www.amazon.com/s?k=plant+based+protein'
+    },
+    {
+      id: 4,
+      name: 'Fitness Tracker Watch',
+      price: 99.99,
+      rating: 4.9,
+      image: 'https://images.unsplash.com/photo-1575311373937-040b8e1fd5b6?q=80&w=2488&q=80',
+      description: 'Tracks steps, sleep, heart rate, and workouts with 7-day battery life.',
+      category: 'equipment',
+      amazonLink: 'https://www.amazon.com/s?k=fitness+tracker'
+    },
+    {
+      id: 5,
+      name: 'Meditation Cushion',
+      price: 34.99,
+      rating: 4.6,
+      image: 'https://images.unsplash.com/photo-1545205597-3d9d02c29597?q=80&w=2340&q=80',
+      description: 'Comfortable buckwheat-filled cushion for meditation practice.',
+      category: 'mindfulness',
+      amazonLink: 'https://www.amazon.com/s?k=meditation+cushion'
+    },
+    {
+      id: 6,
+      name: 'BCAA Supplement',
+      price: 24.99,
+      rating: 4.4,
+      image: 'https://images.unsplash.com/photo-1579722819315-2e21e1013f90?q=80&w=2340&q=80',
+      description: 'Branched-Chain Amino Acids for muscle recovery and growth.',
+      category: 'nutrition',
+      amazonLink: 'https://www.amazon.com/s?k=bcaa+supplement'
     }
-  }, [activeCategory]);
+  ];
 
   return (
     <Layout>
-      <div className="container mx-auto px-4 py-8 pt-24">
+      <div className="container mx-auto px-4 py-12">
         <div className="text-center mb-12">
-          <h1 className="text-3xl font-bold mb-2">Wellness Store</h1>
+          <h1 className="text-3xl md:text-4xl font-bold mb-4">Wellness Store</h1>
           <p className="text-gray-600 max-w-2xl mx-auto">
-            Curated products to support your wellness journey. All recommendations are personalized based on your profile and goals.
+            High-quality products to support your wellness journey, carefully selected by our fitness experts.
           </p>
         </div>
 
-        {/* Recommended Products Section */}
-        <section className="mb-16">
-          <h2 className="text-2xl font-bold mb-6">Recommended For You</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {recommendedProducts.map(product => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
-        </section>
-        
-        {/* All Products Section with Tabs */}
-        <section>
-          <h2 className="text-2xl font-bold mb-6">Shop All Products</h2>
-          <Tabs defaultValue="all" onValueChange={setActiveCategory} className="w-full">
-            <TabsList className="mb-6">
-              <TabsTrigger value="all">All</TabsTrigger>
+        <Tabs defaultValue="all" className="mb-8">
+          <div className="flex justify-center">
+            <TabsList className="mb-8">
+              <TabsTrigger value="all">All Products</TabsTrigger>
               <TabsTrigger value="equipment">Equipment</TabsTrigger>
-              <TabsTrigger value="supplements">Supplements</TabsTrigger>
-              <TabsTrigger value="accessories">Accessories</TabsTrigger>
+              <TabsTrigger value="nutrition">Nutrition</TabsTrigger>
               <TabsTrigger value="mindfulness">Mindfulness</TabsTrigger>
-              <TabsTrigger value="recovery">Recovery</TabsTrigger>
             </TabsList>
-            <TabsContent value={activeCategory} className="mt-2">
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-                {filteredProducts.map(product => (
-                  <ProductCard key={product.id} product={product} />
-                ))}
-              </div>
-            </TabsContent>
-          </Tabs>
-        </section>
-        
-        {/* Disclaimer */}
-        <div className="mt-16 text-center text-sm text-gray-500">
-          <p>Affiliate Disclosure: Some links on this page are affiliated with partner stores. We may earn a commission on qualifying purchases.</p>
-        </div>
+          </div>
+          
+          <TabsContent value="all">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {products.map(product => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="equipment">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {products.filter(p => p.category === 'equipment').map(product => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="nutrition">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {products.filter(p => p.category === 'nutrition').map(product => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="mindfulness">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {products.filter(p => p.category === 'mindfulness').map(product => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </Layout>
+  );
+};
+
+interface ProductCardProps {
+  product: {
+    id: number;
+    name: string;
+    price: number;
+    rating: number;
+    image: string;
+    description: string;
+    category: string;
+    amazonLink: string;
+  }
+}
+
+const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
+  return (
+    <Card className="overflow-hidden hover:shadow-lg transition-all duration-300">
+      <div className="h-48 overflow-hidden">
+        <img 
+          src={product.image} 
+          alt={product.name}
+          className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+        />
+      </div>
+      <CardHeader>
+        <div className="flex justify-between items-start">
+          <div>
+            <CardTitle>{product.name}</CardTitle>
+            <CardDescription className="mt-1">${product.price}</CardDescription>
+          </div>
+          <Badge variant="outline" className="bg-purple-50 text-purple-800 border-purple-200">
+            {product.category.charAt(0).toUpperCase() + product.category.slice(1)}
+          </Badge>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <p className="text-gray-600 text-sm">{product.description}</p>
+        <div className="flex items-center mt-2 text-amber-500">
+          <Star className="fill-amber-500 stroke-amber-500 h-4 w-4" />
+          <span className="ml-1 text-sm">{product.rating}</span>
+        </div>
+      </CardContent>
+      <CardFooter className="flex justify-between">
+        <a 
+          href={product.amazonLink} 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="flex-1"
+        >
+          <Button className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600">
+            <ShoppingBag className="h-4 w-4" />
+            <span>Buy Now</span>
+            <ExternalLink className="h-3 w-3 ml-1" />
+          </Button>
+        </a>
+      </CardFooter>
+      <div className="flex border-t">
+        <Button 
+          variant="ghost" 
+          className="flex-1 rounded-none border-r"
+        >
+          <Heart className="h-4 w-4 mr-1" />
+          <span className="text-xs">Save</span>
+        </Button>
+        <Button 
+          variant="ghost" 
+          className="flex-1 rounded-none"
+        >
+          <Share2 className="h-4 w-4 mr-1" />
+          <span className="text-xs">Share</span>
+        </Button>
+      </div>
+    </Card>
   );
 };
 

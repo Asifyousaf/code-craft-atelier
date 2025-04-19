@@ -1,4 +1,7 @@
 
+import React, { useState } from 'react';
+import { MessageSquare } from 'lucide-react';
+
 interface AISearchBoxProps {
   onSubmit: (query: string) => void;
 }
