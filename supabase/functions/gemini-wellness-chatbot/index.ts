@@ -1,7 +1,6 @@
 
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { GoogleGenerativeAI } from "https://esm.sh/@google/generative-ai@0.2.1";
 
 // Get environment variables
 const geminiApiKey = Deno.env.get("Gemini_1");
@@ -129,6 +128,54 @@ async function fetchRecipeData(query: string) {
   }
 }
 
+async function generateGeminiResponse(prompt: string) {
+  try {
+    if (!geminiApiKey) {
+      throw new Error("Gemini API key is missing");
+    }
+
+    // Use the updated API endpoint for Gemini
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiApiKey}`;
+    
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        contents: [
+          {
+            parts: [
+              { text: prompt }
+            ]
+          }
+        ],
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 1000
+        }
+      })
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Gemini API error: ${response.status} ${errorText}`);
+    }
+
+    const data = await response.json();
+    
+    // Extract the text from the Gemini response
+    if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts) {
+      return data.candidates[0].content.parts[0].text;
+    } else {
+      throw new Error("Unexpected response format from Gemini API");
+    }
+  } catch (error) {
+    console.error('Error generating Gemini response:', error);
+    throw error;
+  }
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -144,12 +191,6 @@ serve(async (req) => {
       throw new Error("Gemini API key is missing. Please add it to your environment variables.");
     }
     
-    // Initialize Google Generative AI with the Gemini API key
-    const genAI = new GoogleGenerativeAI(geminiApiKey);
-    
-    // Get the generative model (Gemini Pro)
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
-    
     let additionalData = null;
     let dataType = null;
     
@@ -163,15 +204,6 @@ serve(async (req) => {
       additionalData = await fetchRecipeData(message);
       dataType = 'recipe';
     }
-
-    // Create chat session
-    const chat = model.startChat({
-      history: history,
-      generationConfig: {
-        maxOutputTokens: 1000,
-        temperature: 0.7
-      }
-    });
 
     // Build prompt with additional data if available
     let prompt = message;
@@ -195,9 +227,7 @@ serve(async (req) => {
     console.log('Sending prompt to Gemini:', prompt.substring(0, 100) + '...');
     
     // Send message to Gemini
-    const result = await chat.sendMessage(prompt);
-    const response = await result.response;
-    const text = response.text();
+    const text = await generateGeminiResponse(prompt);
     
     console.log('Gemini response received:', text.substring(0, 100) + '...');
     
