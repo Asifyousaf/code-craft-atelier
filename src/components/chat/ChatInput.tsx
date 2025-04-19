@@ -1,5 +1,5 @@
 
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Send, PlusCircle } from 'lucide-react';
 
@@ -20,6 +20,22 @@ const ChatInput: React.FC<ChatInputProps> = ({
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Focus the input when the component mounts
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, []);
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      if (message.trim() && !isLoading) {
+        onSubmit(e);
+      }
+    }
+  };
+
   return (
     <form onSubmit={onSubmit} className="border-t border-gray-100 p-4 bg-white">
       <div className="flex items-center gap-2">
@@ -28,10 +44,12 @@ const ChatInput: React.FC<ChatInputProps> = ({
             type="text"
             value={message}
             onChange={(e) => setMessage(e.target.value)}
+            onKeyPress={handleKeyPress}
             placeholder="Ask anything about fitness & wellness..."
             className="w-full px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500 pr-10"
             disabled={isLoading}
             ref={inputRef}
+            aria-label="Chat message input"
           />
           {!message && (
             <PlusCircle className="absolute right-3 top-2.5 text-gray-400 h-5 w-5" />
@@ -40,6 +58,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
         <Button 
           type="submit" 
           disabled={!message.trim() || isLoading}
+          aria-label="Send message"
           className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 rounded-full p-2 h-10 w-10"
         >
           <Send className="h-5 w-5" />

@@ -53,6 +53,8 @@ async function fetchWorkoutData(query: string) {
       endpoint = `https://exercisedb.p.rapidapi.com/exercises/target/${targetMuscle}`;
     }
     
+    console.log(`Fetching workout data from: ${endpoint}`);
+    
     const response = await fetch(endpoint, {
       method: 'GET',
       headers: {
@@ -62,7 +64,7 @@ async function fetchWorkoutData(query: string) {
     });
     
     if (!response.ok) {
-      throw new Error(`ExerciseDB API error: ${response.status}`);
+      throw new Error(`ExerciseDB API error: ${response.status} ${await response.text()}`);
     }
     
     let data = await response.json();
@@ -109,11 +111,13 @@ async function fetchRecipeData(query: string) {
       params.append('maxCalories', maxCalories.toString());
     }
     
+    console.log(`Fetching recipe data with params: ${params.toString()}`);
+    
     const endpoint = `https://api.spoonacular.com/recipes/complexSearch?${params.toString()}`;
     const response = await fetch(endpoint);
     
     if (!response.ok) {
-      throw new Error(`Spoonacular API error: ${response.status}`);
+      throw new Error(`Spoonacular API error: ${response.status} ${await response.text()}`);
     }
     
     const data = await response.json();
@@ -133,6 +137,11 @@ serve(async (req) => {
   try {
     const { message, history, userProfile } = await req.json();
     console.log('Request received:', { message, historyLength: history?.length, userProfile });
+    
+    // Check if API keys are available
+    if (!openAIApiKey) {
+      throw new Error("OpenAI API key is missing. Please add it to your environment variables.");
+    }
     
     let openAIMessages = [
       { role: 'system', content: systemPrompt }
@@ -198,6 +207,8 @@ serve(async (req) => {
       }
     }
     
+    console.log('Making request to OpenAI with messages:', JSON.stringify(openAIMessages, null, 2).substring(0, 500) + '...');
+    
     // Make request to OpenAI API
     const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -213,13 +224,16 @@ serve(async (req) => {
       })
     });
     
-    const openAIData = await openAIResponse.json();
-    
     if (!openAIResponse.ok) {
-      throw new Error(`OpenAI API error: ${JSON.stringify(openAIData)}`);
+      const errorText = await openAIResponse.text();
+      console.error('OpenAI API error response:', errorText);
+      throw new Error(`OpenAI API error: ${errorText}`);
     }
     
+    const openAIData = await openAIResponse.json();
     const assistantReply = openAIData.choices[0].message.content;
+    
+    console.log('OpenAI response received:', assistantReply.substring(0, 200) + '...');
     
     // Check if the response contains a workout plan that needs to be parsed
     const workoutPlanMatch = assistantReply.match(/WORKOUT_PLAN: (.*?)\|(.*?)\|(.*?)\|(.*?)\|(.*)/s);

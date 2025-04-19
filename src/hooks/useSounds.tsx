@@ -6,14 +6,14 @@ export type SoundType = 'meditation' | 'ambient' | 'nature' | 'chimes' | 'beep' 
 
 // Sound library with URLs
 const soundLibrary: Record<SoundType, string> = {
-  meditation: 'https://soundbible.com/mp3/Tibetan%20Singing%20Bowl-SoundBible.com-331809129.mp3',
-  ambient: 'https://soundbible.com/mp3/rain_ambient-GlorySunz-1566213269.mp3',
-  nature: 'https://soundbible.com/mp3/birds-singing-02-20131124-17380296.mp3',
-  chimes: 'https://soundbible.com/mp3/Japanese%20Temple%20Bell%20Small-SoundBible.com-113624364.mp3',
-  beep: 'https://soundbible.com/mp3/Electronic_Chime-KevanGC-495939803.mp3',
-  success: 'https://soundbible.com/mp3/success-1-6297.mp3',
-  failure: 'https://soundbible.com/mp3/system-fault-518.mp3',
-  notification: 'https://soundbible.com/mp3/notification-sound-7062.mp3'
+  meditation: 'https://assets.mixkit.co/sfx/preview/mixkit-meditation-bell-sound-2293.mp3',
+  ambient: 'https://assets.mixkit.co/sfx/preview/mixkit-forest-stream-ambience-1186.mp3',
+  nature: 'https://assets.mixkit.co/sfx/preview/mixkit-birds-in-forest-loop-1236.mp3',
+  chimes: 'https://assets.mixkit.co/sfx/preview/mixkit-achievement-bell-600.mp3',
+  beep: 'https://assets.mixkit.co/sfx/preview/mixkit-positive-notification-951.mp3',
+  success: 'https://assets.mixkit.co/sfx/preview/mixkit-correct-answer-tone-2870.mp3',
+  failure: 'https://assets.mixkit.co/sfx/preview/mixkit-wrong-answer-fail-notification-946.mp3',
+  notification: 'https://assets.mixkit.co/sfx/preview/mixkit-software-interface-start-2574.mp3'
 };
 
 export interface SoundOptions {
@@ -44,13 +44,16 @@ const useSounds = () => {
           const audio = new Audio(url);
           audio.preload = 'auto';
           audio.addEventListener('canplaythrough', () => {
+            console.log(`Sound loaded successfully: ${key}`);
             setIsLoaded(prev => ({ ...prev, [key]: true }));
             resolve();
           });
           
           // Add error handling
-          audio.addEventListener('error', () => {
-            console.error(`Failed to load sound: ${key}`);
+          audio.addEventListener('error', (e) => {
+            console.error(`Failed to load sound: ${key}`, e);
+            // Still mark as loaded to prevent blocking the app
+            setIsLoaded(prev => ({ ...prev, [key]: true }));
             resolve(); // Resolve anyway to not block other sounds
           });
           
@@ -111,6 +114,11 @@ const useSounds = () => {
       if (playPromise !== undefined) {
         playPromise.catch(error => {
           console.error("Playback prevented by browser:", error);
+          // Try again with user interaction
+          document.addEventListener('click', function playOnClick() {
+            audio.play().catch(e => console.error("Still couldn't play audio:", e));
+            document.removeEventListener('click', playOnClick);
+          }, { once: true });
         });
       }
       

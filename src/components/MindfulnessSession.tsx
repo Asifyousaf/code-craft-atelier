@@ -38,6 +38,7 @@ const MindfulnessSession: React.FC<MindfulnessSessionProps> = ({
   const [soundType, setSoundType] = useState<'meditation' | 'ambient' | 'nature'>('meditation');
   const [showControls, setShowControls] = useState(true);
   const [showGuide, setShowGuide] = useState(false);
+  const [soundTestStatus, setSoundTestStatus] = useState<'idle' | 'testing' | 'success' | 'failed'>('idle');
   
   const { play, pause, stop, isLoaded } = useSounds();
 
@@ -181,6 +182,48 @@ const MindfulnessSession: React.FC<MindfulnessSessionProps> = ({
       }
     }
   };
+  
+  const testSound = () => {
+    setSoundTestStatus('testing');
+    
+    // Try all sounds until one works
+    const soundTypes: SoundType[] = ['chimes', 'beep', 'notification', 'success'];
+    
+    const trySound = (index: number) => {
+      if (index >= soundTypes.length) {
+        setSoundTestStatus('failed');
+        toast({
+          title: "Sound Test Failed",
+          description: "We couldn't play any sounds. Please check your device volume and browser permissions.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      const soundType = soundTypes[index];
+      const audio = play(soundType, { volume: 1.0 });
+      
+      if (audio) {
+        audio.onended = () => {
+          setSoundTestStatus('success');
+          toast({
+            title: "Sound Test Successful",
+            description: "Audio is working correctly!",
+          });
+        };
+        
+        audio.onerror = () => {
+          // Try next sound
+          trySound(index + 1);
+        };
+      } else {
+        // Try next sound
+        trySound(index + 1);
+      }
+    };
+    
+    trySound(0);
+  };
 
   const progress = ((duration * 60 - timeLeft) / (duration * 60)) * 100;
 
@@ -200,6 +243,27 @@ const MindfulnessSession: React.FC<MindfulnessSessionProps> = ({
       </CardHeader>
 
       <CardContent className="space-y-6">
+        {/* Sound Test Button */}
+        <div className="text-center">
+          <Button 
+            variant="outline"
+            onClick={testSound}
+            disabled={soundTestStatus === 'testing'}
+            className="mb-3"
+          >
+            {soundTestStatus === 'testing' ? (
+              <>Testing Sounds...</>
+            ) : soundTestStatus === 'success' ? (
+              <>Sound Working ✓</>
+            ) : (
+              <>Test Sound</>
+            )}
+          </Button>
+          <p className="text-xs text-gray-500">
+            If you can't hear sounds, press this button to test your audio
+          </p>
+        </div>
+        
         {/* Timer Display */}
         <div className="text-center py-8">
           <AnimatePresence mode="wait">
