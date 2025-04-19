@@ -24,7 +24,7 @@ import TermsOfServicePage from "./pages/TermsOfServicePage";
 import CookiePolicyPage from "./pages/CookiePolicyPage";
 import SafetyCenterPage from "./pages/SafetyCenterPage";
 import CommunityGuidelinesPage from "./pages/CommunityGuidelinesPage";
-import AISupportChat from "./components/AISupportChat";
+import GeminiChat from "./components/gemini/GeminiChat";
 
 const queryClient = new QueryClient();
 
@@ -34,7 +34,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <AISupportChat />
+        <GeminiChat />
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/workouts" element={<WorkoutsPage />} />

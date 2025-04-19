@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Play, Utensils, Dumbbell, Activity, MessageSquare, Trophy, Users, Heart } from 'lucide-react';
@@ -7,7 +6,7 @@ import Layout from '../components/Layout';
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
 import AISearchBox from '../components/AISearchBox';
-import AISupportChat from '../components/AISupportChat';
+import GeminiChat from '../components/gemini/GeminiChat';
 import useSounds from '../hooks/useSounds';
 
 const Index = () => {
@@ -109,8 +108,8 @@ const Index = () => {
     setChatVisible(true);
     
     // Find the chat component and pass the message
-    if (window && (window as any).aiSupportChatRef) {
-      (window as any).aiSupportChatRef.handleIncomingMessage(query);
+    if (window && (window as any).geminiChatRef) {
+      (window as any).geminiChatRef.handleIncomingMessage(query);
     }
   };
 
@@ -357,7 +356,7 @@ const Index = () => {
       </section>
 
       {/* Chat Component */}
-      <AISupportChat visible={chatVisible} onClose={() => setChatVisible(false)} />
+      <GeminiChat visible={chatVisible} onClose={() => setChatVisible(false)} />
     </Layout>
   );
 };

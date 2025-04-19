@@ -23,3 +23,6 @@ site_url = "http://localhost:3000"
 [functions]
 [functions.wellness-chatbot]
 verify_jwt = false
+[functions.gemini-wellness-chatbot]
+verify_jwt = false
+
