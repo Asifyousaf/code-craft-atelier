@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Play, Utensils, Dumbbell, Activity, MessageSquare, Trophy, Users, Heart } from 'lucide-react';
@@ -8,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "@/components/ui/use-toast";
 import AISearchBox from '../components/AISearchBox';
+import AISupportChat from '../components/AISupportChat';
+import useSounds from '../hooks/useSounds';
 
 const Index = () => {
   const [session, setSession] = useState<any>(null);
@@ -95,6 +96,24 @@ const Index = () => {
       navigate('/auth');
     }
   };
+  const { play, isLoaded } = useSounds();
+  const [chatVisible, setChatVisible] = useState(false);
+
+  const handleAISearchSubmit = async (query: string) => {
+    // Play sound effect when search is submitted
+    if (isLoaded.beep) {
+      play('beep', { volume: 0.5 });
+    }
+    
+    // Show the chat
+    setChatVisible(true);
+    
+    // Find the chat component and pass the message
+    const chatComponent = document.querySelector('ai-support-chat');
+    if (chatComponent) {
+      (chatComponent as any).handleIncomingMessage?.(query);
+    }
+  };
 
   return (
     <Layout>
@@ -115,7 +134,7 @@ const Index = () => {
           
           {/* AI Search Box */}
           <div className="mt-10 max-w-xl mx-auto">
-            <AISearchBox />
+            <AISearchBox onSubmit={handleAISearchSubmit} />
           </div>
         </div>
       </section>
@@ -337,6 +356,9 @@ const Index = () => {
           </div>
         </div>
       </section>
+
+      {/* Chat Component */}
+      <AISupportChat visible={chatVisible} onClose={() => setChatVisible(false)} />
     </Layout>
   );
 };
