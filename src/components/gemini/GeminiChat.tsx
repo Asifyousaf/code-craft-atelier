@@ -194,6 +194,98 @@ const GeminiChat: React.FC<GeminiChatProps> = ({ visible = false, onClose }) => 
     }
   };
 
+  const handleAddWorkout = async (workoutPlan: any) => {
+    try {
+      if (!user) {
+        toast({
+          title: "Sign in required",
+          description: "Please sign in to save workout plans",
+          variant: "default",
+        });
+        return;
+      }
+
+      // Extract workout details
+      const workoutData = {
+        user_id: user.id,
+        title: workoutPlan.name || "Custom Workout",
+        type: workoutPlan.target || "General",
+        duration: 30, // Default duration
+        calories_burned: 300, // Default calories
+        date: new Date().toISOString().split('T')[0]
+      };
+
+      // Save to Supabase
+      const { error } = await supabase.from('workouts').insert(workoutData);
+
+      if (error) throw error;
+      
+      // Play success sound
+      playSoundEffect('success');
+      
+      toast({
+        title: "Workout Added",
+        description: "The workout has been added to your workout plan",
+      });
+    } catch (error) {
+      // Play error sound
+      playSoundEffect('failure');
+      
+      toast({
+        title: "Error",
+        description: "Failed to add workout",
+        variant: "destructive"
+      });
+      console.error('Error saving workout:', error);
+    }
+  };
+
+  const handleSaveRecipe = async (recipe: any) => {
+    try {
+      if (!user) {
+        toast({
+          title: "Sign in required",
+          description: "Please sign in to save recipes",
+          variant: "default",
+        });
+        return;
+      }
+
+      // Extract recipe details
+      const recipeData = {
+        user_id: user.id,
+        title: recipe.title || "Custom Recipe",
+        image: recipe.image || null,
+        calories: recipe.nutrition?.calories || "N/A",
+        source_url: recipe.sourceUrl || "",
+        date_saved: new Date().toISOString().split('T')[0]
+      };
+
+      // Save to Supabase - assuming there's a 'recipes' table
+      const { error } = await supabase.from('recipes').insert(recipeData);
+
+      if (error) throw error;
+      
+      // Play success sound
+      playSoundEffect('success');
+      
+      toast({
+        title: "Recipe Saved",
+        description: "The recipe has been saved to your collection",
+      });
+    } catch (error) {
+      // Play error sound
+      playSoundEffect('failure');
+      
+      toast({
+        title: "Error",
+        description: "Failed to save recipe",
+        variant: "destructive"
+      });
+      console.error('Error saving recipe:', error);
+    }
+  };
+
   const handleVolumeChange = (newVolume: number[]) => {
     setVolume(newVolume[0]);
   };
@@ -320,7 +412,9 @@ const GeminiChat: React.FC<GeminiChatProps> = ({ visible = false, onClose }) => 
               <div className="space-y-4">
                 <GeminiMessageList 
                   messages={conversation} 
-                  isLoading={isLoading} 
+                  isLoading={isLoading}
+                  onAddWorkout={handleAddWorkout}
+                  onSaveRecipe={handleSaveRecipe} 
                 />
                 {isLoading && (
                   <div className="flex justify-start">

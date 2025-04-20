@@ -15,13 +15,30 @@ const corsHeaders = {
 
 // System prompt for the Gemini AI
 const systemPrompt = `
-You are a certified personal trainer and nutritionist. You help users with beginner-friendly workout plans, meal suggestions, calorie advice, and basic meditation tips. Always ask users about their goals, fitness level, and dietary preferences before giving detailed answers. Never give medical advice. If someone has a health condition or injury, tell them to consult a doctor. Be friendly, concise, and motivating in tone. Avoid extreme diets or unsafe recommendations.
+You are a certified personal trainer and nutritionist who helps users with workout plans, meal suggestions, and wellness tips.
 
-When users ask about workout routines for specific body parts or goals, mention that you're checking the ExerciseDB for accurate information.
+IMPORTANT FORMATTING RULES:
+1. Use plain text only. No markdown formatting.
+2. Do not use * for bullets or any other special characters like --, ==, or ** for formatting.
+3. Keep your responses conversational, clear, and concise.
 
-When users ask about meal plans, recipes, or nutrition advice, mention that you're checking Spoonacular's database for verified recipes and nutritional information.
+When users ask about workouts:
+- Tell them you're checking ExerciseDB for accurate information
+- Format your response as "Here's a workout plan for you. You can add it to your workout page."
+- Keep exercise explanations simple and direct
 
-Your responses should be well-formatted with clear paragraphs and bullet points where appropriate.
+When users ask about meals or recipes:
+- Tell them you're checking Spoonacular for verified recipes
+- Format your response as "Here's a recipe you might enjoy. You can save it to your recipe collection."
+- Include basic nutritional information when available
+
+For all responses:
+- Be friendly and supportive but keep it brief
+- Avoid overly technical language
+- Use short paragraphs with clear spacing
+- Never use bullet points with special characters
+
+Your goal is to provide helpful fitness and nutrition guidance in a clean, easy-to-read format that works well in a chat interface.
 `;
 
 // Function to detect if user is asking for workout information
@@ -213,15 +230,15 @@ serve(async (req) => {
         `Name: ${ex.name}, Target: ${ex.target}, Equipment: ${ex.equipment}`
       ).join('\n');
       
-      prompt = `${systemPrompt}\n\nUser query: ${message}\n\nI found these exercises that might be relevant to the user's query. Use this data to provide specific exercise recommendations:\n\n${exerciseSummary}\n\nPlease use this exercise data in your response.`;
+      prompt = `${systemPrompt}\n\nUser query: ${message}\n\nI found these exercises that might be relevant to the user's query. Use this data to provide specific exercise recommendations:\n\n${exerciseSummary}\n\nPlease use this exercise data in your response and begin with "Here's a workout plan that you can add to your workout page." Use simple, clean text format without markdown.`;
     } else if (additionalData && dataType === 'recipe' && Array.isArray(additionalData)) {
       const recipeSummary = additionalData.map(recipe => 
         `Title: ${recipe.title}, Diet: ${recipe.diets?.join(', ') || 'N/A'}`
       ).join('\n');
       
-      prompt = `${systemPrompt}\n\nUser query: ${message}\n\nI found these recipes that might be relevant to the user's query. Use this data to provide specific meal recommendations:\n\n${recipeSummary}\n\nPlease use this recipe data in your response.`;
+      prompt = `${systemPrompt}\n\nUser query: ${message}\n\nI found these recipes that might be relevant to the user's query. Use this data to provide specific meal recommendations:\n\n${recipeSummary}\n\nPlease use this recipe data in your response and begin with "Here's a recipe you might enjoy. You can save it to your recipe collection." Use simple, clean text format without markdown.`;
     } else {
-      prompt = `${systemPrompt}\n\nUser query: ${message}`;
+      prompt = `${systemPrompt}\n\nUser query: ${message}\n\nPlease respond in simple, clean text format without markdown or special formatting.`;
     }
 
     console.log('Sending prompt to Gemini:', prompt.substring(0, 100) + '...');
