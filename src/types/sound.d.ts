@@ -1,2 +1,10 @@
 
-export type SoundType = 'beep' | 'success' | 'failure' | 'notification' | 'ambient' | 'meditation' | 'nature' | 'chimes';
+export type SoundType = 
+  | 'beep' 
+  | 'notification' 
+  | 'success' 
+  | 'failure'
+  | 'meditation'
+  | 'ambient'
+  | 'nature'
+  | 'chimes';

@@ -1,8 +1,8 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
-import { Plus } from 'lucide-react';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Utensils, Clock, Heart } from 'lucide-react';
 
 interface RecipePreviewProps {
   recipeData: any[];
@@ -10,44 +10,86 @@ interface RecipePreviewProps {
 }
 
 const RecipePreview: React.FC<RecipePreviewProps> = ({ recipeData, onSaveRecipe }) => {
-  if (!recipeData.length) return null;
-
-  const recipe = recipeData[0]; // Take the first recipe suggestion
-
+  if (!recipeData || recipeData.length === 0) return null;
+  
+  const handleSaveRecipe = (recipe: any) => {
+    if (onSaveRecipe) {
+      onSaveRecipe(recipe);
+    }
+  };
+  
+  // Select the first recipe to display
+  const recipe = recipeData[0];
+  
   return (
-    <Card className="mt-2 bg-green-50">
-      <CardHeader>
-        <CardTitle className="text-sm font-medium">Suggested Recipe</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-2">
-          <p className="text-sm font-medium">{recipe.title}</p>
-          {recipe.image && (
-            <img 
-              src={recipe.image} 
-              alt={recipe.title} 
-              className="w-full h-32 object-cover rounded-md"
-            />
+    <div className="mt-4">
+      <Card className="border border-green-200">
+        <CardHeader className="bg-green-50 pb-2">
+          <CardTitle className="text-sm font-medium text-green-800 flex items-center">
+            <Utensils className="w-4 h-4 mr-2" /> 
+            Recipe Suggestion
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-4 pb-2">
+          <div className="flex gap-3">
+            {recipe.image && (
+              <div className="w-20 h-20 flex-shrink-0">
+                <img 
+                  src={recipe.image} 
+                  alt={recipe.title}
+                  className="w-full h-full object-cover rounded" 
+                />
+              </div>
+            )}
+            <div className="flex-1">
+              <h4 className="font-medium text-sm">{recipe.title}</h4>
+              
+              <div className="flex flex-wrap gap-2 mt-2">
+                {recipe.readyInMinutes && (
+                  <div className="flex items-center text-xs text-gray-600">
+                    <Clock className="w-3 h-3 mr-1" /> {recipe.readyInMinutes} min
+                  </div>
+                )}
+                
+                {recipe.healthScore && (
+                  <div className="flex items-center text-xs text-gray-600">
+                    <Heart className="w-3 h-3 mr-1" /> Health Score: {recipe.healthScore}
+                  </div>
+                )}
+              </div>
+              
+              {recipe.diets && recipe.diets.length > 0 && (
+                <div className="flex flex-wrap gap-1 mt-2">
+                  {recipe.diets.slice(0, 2).map((diet: string, i: number) => (
+                    <span key={i} className="bg-green-100 px-1.5 py-0.5 rounded-full text-xs">
+                      {diet}
+                    </span>
+                  ))}
+                  {recipe.diets.length > 2 && (
+                    <span className="text-xs text-gray-500">+{recipe.diets.length - 2} more</span>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+          
+          {recipeData.length > 1 && (
+            <p className="text-xs text-gray-500 text-center italic mt-3">
+              +{recipeData.length - 1} more recipes available
+            </p>
           )}
-          <p className="text-sm text-gray-600">
-            Calories: {recipe.nutrition?.calories || 'N/A'}
-          </p>
-        </div>
-      </CardContent>
-      {onSaveRecipe && (
-        <CardFooter>
+        </CardContent>
+        <CardFooter className="bg-gray-50 pt-2">
           <Button 
-            variant="outline" 
-            size="sm" 
-            className="w-full" 
-            onClick={() => onSaveRecipe(recipe)}
+            onClick={() => handleSaveRecipe(recipe)}
+            className="w-full bg-green-600 hover:bg-green-700 text-white"
+            size="sm"
           >
-            <Plus className="w-4 h-4 mr-2" />
             Save Recipe
           </Button>
         </CardFooter>
-      )}
-    </Card>
+      </Card>
+    </div>
   );
 };
 

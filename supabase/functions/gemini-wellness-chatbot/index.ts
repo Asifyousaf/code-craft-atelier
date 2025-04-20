@@ -23,20 +23,20 @@ IMPORTANT FORMATTING RULES:
 3. Keep your responses conversational, clear, and concise.
 
 When users ask about workouts:
-- Tell them you're checking ExerciseDB for accurate information
-- Format your response as "Here's a workout plan for you. You can add it to your workout page."
-- Keep exercise explanations simple and direct
+- Tell them "Here's a workout plan for you. You can add it to your workout page."
+- Keep exercise explanations simple and direct.
+- Structure all workouts with a clear title, target muscles, and instructions.
 
 When users ask about meals or recipes:
-- Tell them you're checking Spoonacular for verified recipes
-- Format your response as "Here's a recipe you might enjoy. You can save it to your recipe collection."
-- Include basic nutritional information when available
+- Tell them "Here's a recipe you might enjoy. You can save it to your recipe collection."
+- Include basic nutritional information when available.
+- Structure all recipes with a clear title, ingredients, and instructions.
 
 For all responses:
-- Be friendly and supportive but keep it brief
-- Avoid overly technical language
-- Use short paragraphs with clear spacing
-- Never use bullet points with special characters
+- Be friendly and supportive but keep it brief.
+- Avoid overly technical language.
+- Use short paragraphs with clear spacing.
+- Never use bullet points with special characters.
 
 Your goal is to provide helpful fitness and nutrition guidance in a clean, easy-to-read format that works well in a chat interface.
 `;
@@ -230,7 +230,7 @@ serve(async (req) => {
         `Name: ${ex.name}, Target: ${ex.target}, Equipment: ${ex.equipment}`
       ).join('\n');
       
-      prompt = `${systemPrompt}\n\nUser query: ${message}\n\nI found these exercises that might be relevant to the user's query. Use this data to provide specific exercise recommendations:\n\n${exerciseSummary}\n\nPlease use this exercise data in your response and begin with "Here's a workout plan that you can add to your workout page." Use simple, clean text format without markdown.`;
+      prompt = `${systemPrompt}\n\nUser query: ${message}\n\nI found these exercises that might be relevant to the user's query. Use this data to provide specific exercise recommendations:\n\n${exerciseSummary}\n\nPlease use this exercise data in your response and begin with "Here's a workout plan for you. You can add it to your workout page." Use simple, clean text format without markdown.`;
     } else if (additionalData && dataType === 'recipe' && Array.isArray(additionalData)) {
       const recipeSummary = additionalData.map(recipe => 
         `Title: ${recipe.title}, Diet: ${recipe.diets?.join(', ') || 'N/A'}`
@@ -248,10 +248,19 @@ serve(async (req) => {
     
     console.log('Gemini response received:', text.substring(0, 100) + '...');
     
+    // Process the text to remove any special characters
+    let cleanedText = text
+      .replace(/\*\*/g, '')  // Remove bold markdown
+      .replace(/\*/g, '')     // Remove italic markdown
+      .replace(/==/g, '')     // Remove highlight markdown
+      .replace(/--/g, '')     // Remove strikethrough
+      .replace(/```.*?```/gs, '') // Remove code blocks
+      .replace(/#/g, '');     // Remove heading markdown
+      
     // Return the chatbot response
     return new Response(
       JSON.stringify({
-        reply: text,
+        reply: cleanedText,
         workoutData: dataType === 'exercise' ? additionalData : null,
         recipeData: dataType === 'recipe' ? additionalData : null,
         dataType: dataType

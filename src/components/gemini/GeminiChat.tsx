@@ -8,7 +8,9 @@ import { Slider } from '@/components/ui/slider';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { supabase } from '@/integrations/supabase/client';
-import useSounds, { SoundType } from '@/hooks/useSounds';
+import useSounds from '@/hooks/useSounds';
+import { SoundType } from '@/types/sound';
+import { useNavigate } from 'react-router-dom';
 import GeminiMessageList from './GeminiMessageList';
 import GeminiChatInput from './GeminiChatInput';
 import GeminiSuggestions from './GeminiSuggestions';
@@ -35,12 +37,13 @@ const GeminiChat: React.FC<GeminiChatProps> = ({ visible = false, onClose }) => 
   const [conversation, setConversation] = useState<Message[]>([
     {
       id: '0',
-      content: "Hi there! I'm your wellness assistant powered by Gemini AI. How can I help you with workouts, nutrition, or mindfulness today?",
+      content: "Hi there! I'm your wellness assistant. How can I help you with workouts, nutrition, or mindfulness today?",
       sender: 'ai',
       timestamp: new Date()
     }
   ]);
   const { toast } = useToast();
+  const navigate = useNavigate();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [user, setUser] = useState<any>(null);
   const [isSoundEnabled, setIsSoundEnabled] = useState(true);
@@ -194,7 +197,7 @@ const GeminiChat: React.FC<GeminiChatProps> = ({ visible = false, onClose }) => 
     }
   };
 
-  const handleAddWorkout = async (workoutPlan: any) => {
+  const handleAddWorkout = async (workout: any) => {
     try {
       if (!user) {
         toast({
@@ -208,8 +211,8 @@ const GeminiChat: React.FC<GeminiChatProps> = ({ visible = false, onClose }) => 
       // Extract workout details
       const workoutData = {
         user_id: user.id,
-        title: workoutPlan.name || "Custom Workout",
-        type: workoutPlan.target || "General",
+        title: workout.name || "Custom Workout",
+        type: workout.target || "General",
         duration: 30, // Default duration
         calories_burned: 300, // Default calories
         date: new Date().toISOString().split('T')[0]
@@ -227,6 +230,9 @@ const GeminiChat: React.FC<GeminiChatProps> = ({ visible = false, onClose }) => 
         title: "Workout Added",
         description: "The workout has been added to your workout plan",
       });
+      
+      // Navigate to the workouts page
+      navigate('/workouts');
     } catch (error) {
       // Play error sound
       playSoundEffect('failure');
@@ -251,35 +257,50 @@ const GeminiChat: React.FC<GeminiChatProps> = ({ visible = false, onClose }) => 
         return;
       }
 
-      // Extract recipe details
-      const recipeData = {
-        user_id: user.id,
-        title: recipe.title || "Custom Recipe",
-        image: recipe.image || null,
-        calories: recipe.nutrition?.calories || "N/A",
-        source_url: recipe.sourceUrl || "",
-        date_saved: new Date().toISOString().split('T')[0]
-      };
+      // Extract recipe details - we'll create a custom table for recipes
+      // First check if recipes table exists
+      const { data: tableExists } = await supabase
+        .from('nutrition_logs')
+        .select('id')
+        .limit(1);
 
-      // Save to Supabase - assuming there's a 'recipes' table
-      const { error } = await supabase.from('recipes').insert(recipeData);
+      if (tableExists) {
+        // Save as nutrition log since we don't have a recipes table
+        const nutritionData = {
+          user_id: user.id,
+          food_name: recipe.title || "Custom Recipe",
+          calories: recipe.nutrition?.calories || 300,
+          protein: 25, // Default values
+          carbs: 40,
+          fat: 15,
+          meal_type: "recipe",
+          date: new Date().toISOString().split('T')[0]
+        };
 
-      if (error) throw error;
-      
-      // Play success sound
-      playSoundEffect('success');
-      
-      toast({
-        title: "Recipe Saved",
-        description: "The recipe has been saved to your collection",
-      });
+        const { error } = await supabase.from('nutrition_logs').insert(nutritionData);
+        
+        if (error) throw error;
+        
+        // Play success sound
+        playSoundEffect('success');
+        
+        toast({
+          title: "Recipe Saved",
+          description: "The recipe has been saved to your nutrition logs",
+        });
+        
+        // Navigate to the nutrition page
+        navigate('/nutrition');
+      } else {
+        throw new Error("Nutrition logs table not available");
+      }
     } catch (error) {
       // Play error sound
       playSoundEffect('failure');
       
       toast({
         title: "Error",
-        description: "Failed to save recipe",
+        description: "Failed to save recipe. Please try again.",
         variant: "destructive"
       });
       console.error('Error saving recipe:', error);
